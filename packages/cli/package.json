@@ -1,0 +1,29 @@
+{
+  "name": "wapi",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wapi": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "citty": "^0.1.0",
+    "consola": "^3.4.0",
+    "execa": "^9.5.0",
+    "open": "^10.1.0",
+    "@wapi/wire": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.0"
+  }
+}
