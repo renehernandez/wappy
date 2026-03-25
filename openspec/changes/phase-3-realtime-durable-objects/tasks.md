@@ -45,7 +45,7 @@
 
 ## 7. Testing
 
-- [ ] 7.1 Write tests for UserRoom — connect, broadcast, disconnect
-- [ ] 7.2 Write tests for SessionRoom — connect, message streaming, disconnect
-- [ ] 7.3 Write tests for notification helper — successful send, failure tolerance
-- [ ] 7.4 Verify existing HTTP tests still pass with custom server.ts entry point
+- [x] 7.1 Write tests for UserRoom — connect, broadcast, disconnect
+- [x] 7.2 Write tests for SessionRoom — connect, message streaming, disconnect
+- [x] 7.3 Write tests for notification helper — successful send, failure tolerance
+- [x] 7.4 Verify existing HTTP tests still pass with custom server.ts entry point
