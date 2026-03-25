@@ -20,5 +20,23 @@
       "binding": "KV",
       "id": "local"
     }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "UserRoom",
+        "class_name": "UserRoom"
+      },
+      {
+        "name": "SessionRoom",
+        "class_name": "SessionRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["UserRoom", "SessionRoom"]
+    }
   ]
 }

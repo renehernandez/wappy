@@ -2,6 +2,7 @@ import { and, asc, eq, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { sessionMessages, sessions } from "../../../db/schema";
 import type { getDb } from "../lib/db";
+import { notifySessionRoom, notifyUserRoom } from "../lib/notify";
 import { incrementSeq, nextMessageSeq } from "../lib/seq";
 
 type Db = ReturnType<typeof getDb>;
@@ -50,6 +51,21 @@ export async function addMessage(
     .update(sessions)
     .set({ updatedAt: now })
     .where(eq(sessions.id, data.sessionId));
+
+  // Notify DOs (best-effort, never fails the function)
+  notifyUserRoom(accountId, {
+    type: "message_added",
+    sessionId: data.sessionId,
+    messageSeq: seq,
+  });
+  notifySessionRoom(data.sessionId, {
+    type: "message",
+    id: message.id,
+    seq: message.seq,
+    role: message.role,
+    content: message.content,
+    createdAt: message.createdAt,
+  });
 
   return message;
 }

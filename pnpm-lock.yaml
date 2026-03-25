@@ -29,6 +29,12 @@ importers:
       nanoid:
         specifier: ^5.1.0
         version: 5.1.7
+      partyserver:
+        specifier: ^0.0.60
+        version: 0.0.60(@cloudflare/workers-types@4.20260317.1)
+      partysocket:
+        specifier: ^1.1.0
+        version: 1.1.16(react@19.2.4)
       react:
         specifier: ^19.1.0
         version: 19.2.4
@@ -1911,6 +1917,9 @@ packages:
   estree-walker@3.0.3:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
 
+  event-target-polyfill@0.0.4:
+    resolution: {integrity: sha512-Gs6RLjzlLRdT8X9ZipJdIZI/Y6/HhRLyq9RdDlCsnpxr/+Nn6bU2EFGuC94GjxqhM+Nmij2Vcq98yoHrU8uNFQ==}
+
   execa@9.6.1:
     resolution: {integrity: sha512-9Be3ZoN4LmYR90tUoVu2te2BsbzHfhJyfEiAVfz7N5/zv+jduIfLrV2xdQXOHbaD6KgpGdO9PRPM1Y4Q9QkPkA==}
     engines: {node: ^18.19.0 || >=20.5.0}
@@ -2254,6 +2263,19 @@ packages:
 
   parse5@7.3.0:
     resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
+
+  partyserver@0.0.60:
+    resolution: {integrity: sha512-hFxLP2qMtm3fA3lJSJX+9ck3OrWfNnc27vLCIiI4CIDkDA55yuaeR96TlAolJDACwFSyXVTYGGTVuZYYHMusCg==}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.20240729.0
+
+  partysocket@1.1.16:
+    resolution: {integrity: sha512-d7xFv+ZC7x0p/DAHWJ5FhxQhimIx+ucyZY+kxL0cKddLBmK9c4p2tEA/L+dOOrWm6EYrRwrBjKQV0uSzOY9x1w==}
+    peerDependencies:
+      react: '>=17'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
@@ -2983,8 +3005,7 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260317.1':
     optional: true
 
-  '@cloudflare/workers-types@4.20260317.1':
-    optional: true
+  '@cloudflare/workers-types@4.20260317.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -4272,6 +4293,8 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.8
 
+  event-target-polyfill@0.0.4: {}
+
   execa@9.6.1:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
@@ -4570,6 +4593,17 @@ snapshots:
   parse5@7.3.0:
     dependencies:
       entities: 6.0.1
+
+  partyserver@0.0.60(@cloudflare/workers-types@4.20260317.1):
+    dependencies:
+      '@cloudflare/workers-types': 4.20260317.1
+      nanoid: 5.1.7
+
+  partysocket@1.1.16(react@19.2.4):
+    dependencies:
+      event-target-polyfill: 0.0.4
+    optionalDependencies:
+      react: 19.2.4
 
   path-key@3.1.1: {}
 

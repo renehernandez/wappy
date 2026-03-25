@@ -21,6 +21,8 @@
     "nanoid": "^5.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "partyserver": "^0.0.60",
+    "partysocket": "^1.1.0",
     "zod": "^3.24.0",
     "@wapi/wire": "workspace:*"
   },

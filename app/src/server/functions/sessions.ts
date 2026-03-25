@@ -2,6 +2,7 @@ import { and, count, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { sessionMessages, sessions } from "../../../db/schema";
 import type { getDb } from "../lib/db";
+import { notifyUserRoom } from "../lib/notify";
 import { incrementSeq } from "../lib/seq";
 
 type Db = ReturnType<typeof getDb>;
@@ -42,6 +43,11 @@ export async function createSession(
   };
 
   await db.insert(sessions).values(session);
+  notifyUserRoom(accountId, {
+    type: "session_created",
+    sessionId: id,
+    title: data.title ?? null,
+  });
   return session;
 }
 
@@ -135,6 +141,11 @@ export async function updateSession(
     throw new VersionConflictError();
   }
 
+  notifyUserRoom(accountId, {
+    type: "session_updated",
+    sessionId,
+    status: data.status,
+  });
   return getSession(sessionId, accountId, db);
 }
 
@@ -150,4 +161,10 @@ export async function deleteSession(
     .update(sessions)
     .set({ status: "archived", seq, updatedAt: now })
     .where(and(eq(sessions.id, sessionId), eq(sessions.accountId, accountId)));
+
+  notifyUserRoom(accountId, {
+    type: "session_updated",
+    sessionId,
+    status: "archived",
+  });
 }
