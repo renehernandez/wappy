@@ -42,18 +42,18 @@
 
 ## 7. Server Function Wrappers (TanStack Start)
 
-- [ ] 7.1 Create `server/functions/session-actions.ts` — wrap session functions as `createServerFn` with `inputValidator` and auth
-- [ ] 7.2 Create `server/functions/message-actions.ts` — wrap message functions as `createServerFn` with `inputValidator` and auth
-- [ ] 7.3 Create `server/functions/sync-actions.ts` — wrap getChanges as `createServerFn` with auth
+- [x] 7.1 Create `server/functions/session-actions.ts` — wrap session functions as `createServerFn` with `inputValidator` and auth
+- [x] 7.2 Create `server/functions/message-actions.ts` — wrap message functions as `createServerFn` with `inputValidator` and auth
+- [x] 7.3 Create `server/functions/sync-actions.ts` — wrap getChanges as `createServerFn` with auth
 
 ## 8. Routes + UI
 
-- [ ] 8.1 Create `components/SessionList.tsx` — displays sessions with title, agent type, status badge, message count, time
-- [ ] 8.2 Create `components/MessageThread.tsx` — displays messages with role indicator, content, seq number
-- [ ] 8.3 Create `routes/sessions/index.tsx` — session list page with status filter tabs, loads via listSessions
-- [ ] 8.4 Create `routes/sessions/$sessionId.tsx` — session detail page with message thread, loads via getSession + listMessages
-- [ ] 8.5 Update `routes/index.tsx` — add recent sessions section (5 most recent) above device list
-- [ ] 8.6 Add navigation links: dashboard ↔ sessions list
+- [x] 8.1 Create `components/SessionList.tsx` — displays sessions with title, agent type, status badge, message count, time
+- [x] 8.2 Create `components/MessageThread.tsx` — displays messages with role indicator, content, seq number
+- [x] 8.3 Create `routes/sessions/index.tsx` — session list page with status filter tabs, loads via listSessions
+- [x] 8.4 Create `routes/sessions/$sessionId.tsx` — session detail page with message thread, loads via getSession + listMessages
+- [x] 8.5 Update `routes/index.tsx` — add recent sessions section (5 most recent) above device list
+- [x] 8.6 Add navigation links: dashboard ↔ sessions list
 
 ## 9. Integration Tests
 
