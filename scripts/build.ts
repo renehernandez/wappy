@@ -27,7 +27,7 @@ function run(cmd: string, cwd: string) {
 
 // Step 1: Build the app
 console.log("\n=== Step 1: Building app ===");
-run("npx vite build", APP_DIR);
+run("pnpm vite build", APP_DIR);
 
 if (!existsSync(APP_OUTPUT)) {
   console.error("ERROR: app/dist/ not found after build");
@@ -36,7 +36,7 @@ if (!existsSync(APP_OUTPUT)) {
 
 // Step 2: Build the CLI (tsup cleans dist/)
 console.log("\n=== Step 2: Building CLI ===");
-run("npx tsup", CLI_DIR);
+run("pnpm tsup", CLI_DIR);
 
 // Step 3: Copy Worker output + migrations AFTER tsup (so clean doesn't delete it)
 console.log("\n=== Step 3: Copying Worker bundle to CLI ===");
