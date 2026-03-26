@@ -59,14 +59,41 @@ function wranglerEnv(accountId: string): Record<string, string> {
   >;
 }
 
-function parseD1Id(output: string): string | null {
-  const match = output.match(/database_id\s*[=:]\s*"?([0-9a-f-]+)"?/i);
-  return match?.[1] ?? null;
+async function findD1Id(
+  name: string,
+  env: Record<string, string>,
+): Promise<string | null> {
+  try {
+    const result = await execaCommand(`${WRANGLER} d1 list --json`, { env });
+    const databases = JSON.parse(result.stdout) as Array<{
+      uuid: string;
+      name: string;
+    }>;
+    const db = databases.find((d) => d.name === name);
+    return db?.uuid ?? null;
+  } catch {
+    return null;
+  }
 }
 
-function parseKvId(output: string): string | null {
-  const match = output.match(/id\s*[=:]\s*"?([0-9a-f-]+)"?/i);
-  return match?.[1] ?? null;
+async function findKvId(
+  title: string,
+  env: Record<string, string>,
+): Promise<string | null> {
+  try {
+    const result = await execaCommand(`${WRANGLER} kv namespace list`, { env });
+    const namespaces = JSON.parse(result.stdout) as Array<{
+      id: string;
+      title: string;
+    }>;
+    // KV title is "wapi-wapi-kv" when created with `wrangler kv namespace create wapi-kv`
+    const ns = namespaces.find(
+      (n) => n.title === title || n.title.includes(title),
+    );
+    return ns?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function parseDeployUrl(output: string): string | null {
@@ -144,16 +171,13 @@ export default defineCommand({
     consola.start("Creating D1 database...");
     let d1Id: string;
     try {
-      const result = await execaCommand(`${WRANGLER} d1 create wapi-db`, {
-        env,
-      });
-      const parsed = parseD1Id(result.stdout + result.stderr);
-      if (!parsed) {
-        consola.error("Failed to parse D1 database ID from output:");
-        console.log(result.stdout);
+      await execaCommand(`${WRANGLER} d1 create wapi-db`, { env });
+      const id = await findD1Id("wapi-db", env);
+      if (!id) {
+        consola.error("D1 database created but could not find its ID.");
         process.exit(1);
       }
-      d1Id = parsed;
+      d1Id = id;
       consola.success(`D1 database created: ${d1Id}`);
     } catch (err) {
       consola.error(`Failed to create D1 database: ${String(err)}`);
@@ -164,17 +188,13 @@ export default defineCommand({
     consola.start("Creating KV namespace...");
     let kvId: string;
     try {
-      const result = await execaCommand(
-        `${WRANGLER} kv namespace create wapi-kv`,
-        { env },
-      );
-      const parsed = parseKvId(result.stdout + result.stderr);
-      if (!parsed) {
-        consola.error("Failed to parse KV namespace ID from output:");
-        console.log(result.stdout);
+      await execaCommand(`${WRANGLER} kv namespace create wapi-kv`, { env });
+      const id = await findKvId("wapi-kv", env);
+      if (!id) {
+        consola.error("KV namespace created but could not find its ID.");
         process.exit(1);
       }
-      kvId = parsed;
+      kvId = id;
       consola.success(`KV namespace created: ${kvId}`);
     } catch (err) {
       consola.error(`Failed to create KV namespace: ${String(err)}`);
@@ -255,4 +275,4 @@ export default defineCommand({
   },
 });
 
-export { parseD1Id, parseKvId, parseDeployUrl };
+export { findD1Id, findKvId, parseDeployUrl };
