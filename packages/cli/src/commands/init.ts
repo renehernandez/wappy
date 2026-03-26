@@ -35,12 +35,15 @@ async function detectAccounts(): Promise<CfAccount[]> {
     const result = await execaCommand(`${WRANGLER} whoami`);
     const output = result.stdout + result.stderr;
     const accounts: CfAccount[] = [];
-    // Parse lines like: "Account Name: abc123def456"
+    // Parse table rows like: │ Account Name │ abc123def456 │
     const lines = output.split("\n");
     for (const line of lines) {
-      const match = line.match(/^\s*(.+?):\s+([0-9a-f]{32})\s*$/);
+      const match = line.match(/│\s*(.+?)\s*│\s*([0-9a-f]{32})\s*│/);
       if (match) {
-        accounts.push({ name: match[1].trim(), id: match[2] });
+        const name = match[1].trim();
+        if (name && name !== "Account Name") {
+          accounts.push({ name, id: match[2] });
+        }
       }
     }
     return accounts;
