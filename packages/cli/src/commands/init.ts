@@ -5,7 +5,7 @@ import open from "open";
 import { updateConfig } from "../config";
 import { scaffoldDeployDir } from "../deploy/scaffold";
 
-const WRANGLER = "npx wrangler";
+const WRANGLER = "npx wrangler@4";
 
 async function checkWrangler(): Promise<boolean> {
   try {
