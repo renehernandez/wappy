@@ -15,6 +15,13 @@
       "when": 1774450974313,
       "tag": "0001_hard_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774539633113,
+      "tag": "0002_old_stryfe",
+      "breakpoints": true
     }
   ]
 }

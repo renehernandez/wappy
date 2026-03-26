@@ -55,6 +55,12 @@ const WRANGLER_TEMPLATE = `{
       "id": "KV_ID_PLACEHOLDER"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "R2_BUCKET_PLACEHOLDER"
+    }
+  ],
   "durable_objects": {
     "bindings": [
       {

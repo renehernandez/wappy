@@ -96,6 +96,18 @@ async function findKvId(
   }
 }
 
+async function findR2Bucket(
+  name: string,
+  env: Record<string, string>,
+): Promise<boolean> {
+  try {
+    const result = await execaCommand(`${WRANGLER} r2 bucket list`, { env });
+    return result.stdout.includes(name);
+  } catch {
+    return false;
+  }
+}
+
 function parseDeployUrl(output: string): string | null {
   const match = output.match(/(https:\/\/[^\s]+\.workers\.dev)/);
   return match?.[1] ?? null;
@@ -243,6 +255,40 @@ export default defineCommand({
     }
     updateDeployment({ kvNamespaceId: kvId });
 
+    // Step 3b: Ensure R2 bucket exists
+    let r2BucketName: string | undefined = state.r2BucketName;
+    if (r2BucketName) {
+      const exists = await findR2Bucket(r2BucketName, env);
+      if (exists) {
+        consola.success(`R2 bucket already exists: ${r2BucketName}`);
+      } else {
+        consola.warn(
+          "Saved R2 bucket not found on account, creating new one...",
+        );
+        r2BucketName = undefined;
+      }
+    }
+    if (!r2BucketName) {
+      const exists = await findR2Bucket("wapi-storage", env);
+      if (exists) {
+        r2BucketName = "wapi-storage";
+        consola.success(`Found existing R2 bucket: ${r2BucketName}`);
+      } else {
+        consola.start("Creating R2 bucket...");
+        try {
+          await execaCommand(`${WRANGLER} r2 bucket create wapi-storage`, {
+            env,
+          });
+          r2BucketName = "wapi-storage";
+          consola.success(`R2 bucket created: ${r2BucketName}`);
+        } catch (err) {
+          consola.error(`Failed to create R2 bucket: ${String(err)}`);
+          process.exit(1);
+        }
+      }
+    }
+    updateDeployment({ r2BucketName });
+
     // Step 4: Scaffold temp dir and deploy
     consola.start("Preparing deployment...");
     let scaffold: ReturnType<typeof scaffoldDeployDir>;
@@ -250,6 +296,7 @@ export default defineCommand({
       scaffold = scaffoldDeployDir({
         d1DatabaseId: d1Id,
         kvNamespaceId: kvId,
+        r2BucketName,
       });
     } catch (err) {
       consola.error(
@@ -316,4 +363,4 @@ export default defineCommand({
   },
 });
 
-export { findD1Id, findKvId, parseDeployUrl };
+export { findD1Id, findKvId, findR2Bucket, parseDeployUrl };

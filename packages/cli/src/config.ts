@@ -39,6 +39,7 @@ export interface DeploymentState {
   accountId?: string;
   d1DatabaseId?: string;
   kvNamespaceId?: string;
+  r2BucketName?: string;
   workerName?: string;
   workerUrl?: string;
 }

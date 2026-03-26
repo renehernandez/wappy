@@ -79,13 +79,7 @@ export const sessionMessages = sqliteTable(
       .notNull()
       .references(() => sessions.id),
     seq: integer("seq").notNull(),
-    role: text("role", {
-      enum: ["user", "assistant", "system", "tool"],
-    }).notNull(),
-    content: text("content").notNull(),
-    metadata: text("metadata"),
     accountSeq: integer("account_seq").notNull(),
-    createdAt: text("created_at").notNull(),
   },
   (table) => [
     uniqueIndex("session_messages_session_seq_unique").on(

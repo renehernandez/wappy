@@ -70,11 +70,7 @@ export async function applyMigrations() {
     id text PRIMARY KEY NOT NULL,
     session_id text NOT NULL,
     seq integer NOT NULL,
-    role text NOT NULL,
-    content text NOT NULL,
-    metadata text,
     account_seq integer NOT NULL,
-    created_at text NOT NULL,
     FOREIGN KEY (session_id) REFERENCES sessions(id)
   )`);
   await db.run(

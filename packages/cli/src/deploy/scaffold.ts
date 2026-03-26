@@ -10,6 +10,7 @@ import {
 export interface ScaffoldOptions {
   d1DatabaseId: string;
   kvNamespaceId: string;
+  r2BucketName: string;
 }
 
 export interface ScaffoldResult {
@@ -23,7 +24,8 @@ export function scaffoldDeployDir(opts: ScaffoldOptions): ScaffoldResult {
   // Write wrangler.jsonc with real IDs
   const config = getWranglerTemplate()
     .replace("DATABASE_ID_PLACEHOLDER", opts.d1DatabaseId)
-    .replace("KV_ID_PLACEHOLDER", opts.kvNamespaceId);
+    .replace("KV_ID_PLACEHOLDER", opts.kvNamespaceId)
+    .replace("R2_BUCKET_PLACEHOLDER", opts.r2BucketName);
   writeFileSync(join(dir, "wrangler.jsonc"), config);
 
   // Copy Worker bundle
@@ -50,8 +52,10 @@ export function substituteTemplate(
   template: string,
   d1Id: string,
   kvId: string,
+  r2BucketName = "wapi-storage",
 ): string {
   return template
     .replace("DATABASE_ID_PLACEHOLDER", d1Id)
-    .replace("KV_ID_PLACEHOLDER", kvId);
+    .replace("KV_ID_PLACEHOLDER", kvId)
+    .replace("R2_BUCKET_PLACEHOLDER", r2BucketName);
 }
