@@ -9,9 +9,16 @@ pnpm install
 lefthook install
 """
 
+[tasks.build]
+description = "Build app and CLI with worker bundle"
+run = "pnpm build"
+
+[tasks."publish:local"]
+description = "Build and link CLI globally so 'wapi' is available everywhere"
+depends = ["build"]
+run = "cd packages/cli && pnpm link --global"
+
 [tasks.init]
 description = "Build and run wapi init to deploy to Cloudflare"
-run = """
-pnpm build
-pnpm wapi -- init "$@"
-"""
+depends = ["build"]
+run = 'pnpm wapi -- init "$@"'
