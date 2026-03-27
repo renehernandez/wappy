@@ -5,7 +5,7 @@ import { join } from "node:path";
 function getConfigDir(): string {
   const xdg = process.env.XDG_CONFIG_HOME;
   const base = xdg || join(homedir(), ".config");
-  return join(base, "wapi");
+  return join(base, "wappy");
 }
 
 function ensureDir(dir: string) {
@@ -97,5 +97,5 @@ export function updateDeployment(updates: Partial<DeploymentState>) {
 }
 
 export function getServerUrl(): string | null {
-  return process.env.WAPI_SERVER_URL || readConfig().serverUrl || null;
+  return process.env.WAPPY_SERVER_URL || readConfig().serverUrl || null;
 }

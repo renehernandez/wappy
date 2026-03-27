@@ -84,7 +84,7 @@ export default defineCommand({
   meta: {
     name: "init",
     description:
-      "Deploy WAPI to your Cloudflare account (no repo clone needed)",
+      "Deploy WAPPY to your Cloudflare account (no repo clone needed)",
   },
   args: {
     accountId: {
@@ -94,11 +94,12 @@ export default defineCommand({
     },
     domain: {
       type: "string",
-      description: "Custom domain for the Worker (e.g., wapi.fullscript.cloud)",
+      description:
+        "Custom domain for the Worker (e.g., wappy.fullscript.cloud)",
     },
   },
   async run({ args }) {
-    consola.info("Setting up WAPI on your Cloudflare account...\n");
+    consola.info("Setting up WAPPY on your Cloudflare account...\n");
 
     const state = readDeployment();
     const customDomain = args.domain || undefined;
@@ -205,7 +206,7 @@ export default defineCommand({
     try {
       consola.start("Applying D1 migrations...");
       await execaCommand(
-        `${WRANGLER} d1 migrations apply wapi-db --remote --migrations-dir app/db/migrations`,
+        `${WRANGLER} d1 migrations apply wappy-db --remote --migrations-dir app/db/migrations`,
         {
           cwd: process.cwd(),
           env,
@@ -227,7 +228,7 @@ export default defineCommand({
     if (serverUrl) {
       updateConfig({ serverUrl });
       updateDeployment({
-        workerName: "wapi",
+        workerName: "wappy",
         workerUrl: deployUrl ?? undefined,
         customDomain,
       });
@@ -255,7 +256,7 @@ export default defineCommand({
     }
 
     console.log(
-      '\nOnce Access is configured, run "wapi auth" to authenticate.\n',
+      '\nOnce Access is configured, run "wappy auth" to authenticate.\n',
     );
   },
 });

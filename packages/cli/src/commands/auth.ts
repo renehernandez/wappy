@@ -12,7 +12,7 @@ function sleep(ms: number) {
 export default defineCommand({
   meta: {
     name: "auth",
-    description: "Authenticate this device with your WAPI server",
+    description: "Authenticate this device with your WAPPY server",
   },
   args: {
     name: {
@@ -25,7 +25,7 @@ export default defineCommand({
     const serverUrl = getServerUrl();
     if (!serverUrl) {
       consola.error(
-        'No server URL configured. Run "wapi init" or "wapi config set serverUrl <url>".',
+        'No server URL configured. Run "wappy init" or "wappy config set serverUrl <url>".',
       );
       process.exit(1);
     }
@@ -94,7 +94,7 @@ export default defineCommand({
         }
 
         if (result.status === "expired") {
-          consola.error('Device code expired. Run "wapi auth" to try again.');
+          consola.error('Device code expired. Run "wappy auth" to try again.');
           process.exit(1);
         }
 

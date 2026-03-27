@@ -19,14 +19,14 @@ function jsonResponse(data: unknown, status = 200) {
 }
 
 describe("createApiClient", () => {
-  const api = createApiClient("https://wapi.test.workers.dev", "my-token");
+  const api = createApiClient("https://wappy.test.workers.dev", "my-token");
 
   it("sends device token in Authorization header", async () => {
     mockFetch.mockResolvedValue(jsonResponse([]));
     await api.listDevices();
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://wapi.test.workers.dev/api/devices",
+      "https://wappy.test.workers.dev/api/devices",
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer device:my-token",
@@ -47,7 +47,7 @@ describe("createApiClient", () => {
     const result = await api.createDeviceCode("my-laptop");
     expect(result.code).toBe("ABCD-1234");
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://wapi.test.workers.dev/api/devices/code",
+      "https://wappy.test.workers.dev/api/devices/code",
       expect.objectContaining({ method: "POST" }),
     );
   });
@@ -73,7 +73,7 @@ describe("createApiClient", () => {
 
 describe("createApiClient without token", () => {
   it("does not send Authorization header", async () => {
-    const api = createApiClient("https://wapi.test.workers.dev");
+    const api = createApiClient("https://wappy.test.workers.dev");
     mockFetch.mockResolvedValue(
       jsonResponse({
         code: "TEST-CODE",

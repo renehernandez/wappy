@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "wapi",
+  "name": "wappy",
   "compatibility_date": "2026-03-17",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
@@ -10,7 +10,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "wapi-db",
+      "database_name": "wappy-db",
       "database_id": "local",
       "migrations_dir": "./db/migrations"
     }
@@ -24,7 +24,7 @@
   "r2_buckets": [
     {
       "binding": "R2",
-      "bucket_name": "wapi-storage"
+      "bucket_name": "wappy-storage"
     }
   ],
   "durable_objects": {

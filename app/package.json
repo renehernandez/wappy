@@ -11,7 +11,7 @@
     "deploy:cf": "vite build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply wapi-db --local",
+    "db:migrate": "wrangler d1 migrations apply wappy-db --local",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

@@ -12,7 +12,7 @@ export default defineCommand({
     const credentials = readCredentials();
 
     if (!serverUrl && !credentials) {
-      consola.info('Not configured. Run "wapi init" to get started.');
+      consola.info('Not configured. Run "wappy init" to get started.');
       return;
     }
 

@@ -25,7 +25,7 @@ export default defineCommand({
     const credentials = readCredentials();
 
     if (!serverUrl || !credentials) {
-      consola.error('Not authenticated. Run "wapi auth" first.');
+      consola.error('Not authenticated. Run "wappy auth" first.');
       process.exit(1);
     }
 
@@ -54,7 +54,7 @@ export default defineCommand({
       console.log("");
     } else if (action === "revoke") {
       if (!args.target) {
-        consola.error("Usage: wapi devices revoke <name-or-id>");
+        consola.error("Usage: wappy devices revoke <name-or-id>");
         process.exit(1);
       }
 

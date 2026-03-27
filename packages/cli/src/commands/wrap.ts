@@ -23,7 +23,7 @@ export default defineCommand({
     const credentials = readCredentials();
 
     if (!serverUrl || !credentials) {
-      consola.error('Not authenticated. Run "wapi auth" first.');
+      consola.error('Not authenticated. Run "wappy auth" first.');
       process.exit(1);
     }
 

@@ -7,7 +7,7 @@ export function generatePackageJson(
 ): string {
   const appVersion = options?.appVersion ?? "^0.0.1";
   const pkg = {
-    name: "wapi-deploy",
+    name: "wappy-deploy",
     private: true,
     dependencies: {
       "@wappy/app": appVersion,
@@ -15,7 +15,7 @@ export function generatePackageJson(
     scripts: {
       deploy: "npx wrangler@4 deploy",
       migrations:
-        "npx wrangler@4 d1 migrations apply wapi-db --remote --migrations-dir app/db/migrations",
+        "npx wrangler@4 d1 migrations apply wappy-db --remote --migrations-dir app/db/migrations",
     },
   };
   const filePath = join(dir, "package.json");
@@ -49,11 +49,11 @@ interface WranglerConfig {
 /**
  * Build the wrangler config object. When a custom domain is provided,
  * a `routes` entry is added and the zone name is derived by dropping the
- * first subdomain label (e.g. "wapi.fullscript.cloud" → zone "fullscript.cloud").
+ * first subdomain label (e.g. "wappy.fullscript.cloud" → zone "fullscript.cloud").
  */
 function buildWranglerConfig(options?: { domain?: string }): WranglerConfig {
   const config: WranglerConfig = {
-    name: "wapi",
+    name: "wappy",
     compatibility_date: "2026-03-17",
     compatibility_flags: ["nodejs_compat"],
     main: "app/dist/server/index.js",
@@ -67,7 +67,7 @@ function buildWranglerConfig(options?: { domain?: string }): WranglerConfig {
     d1_databases: [
       {
         binding: "DB",
-        database_name: "wapi-db",
+        database_name: "wappy-db",
         migrations_dir: "app/db/migrations",
       },
     ],

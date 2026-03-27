@@ -1,2 +1,2 @@
-# wapi
+# wappy
 Happy on Cloudflare Workers

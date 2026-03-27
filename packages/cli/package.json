@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "bin": {
-    "wapi": "./dist/index.js"
+    "wappy": "./dist/index.js"
   },
   "files": ["dist"],
   "scripts": {

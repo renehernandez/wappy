@@ -2,9 +2,9 @@ import { defineCommand, runMain } from "citty";
 
 const main = defineCommand({
   meta: {
-    name: "wapi",
+    name: "wappy",
     version: "0.0.1",
-    description: "WAPI — AI session sync on Cloudflare Workers",
+    description: "WAPPY — AI session sync on Cloudflare Workers",
   },
   subCommands: {
     init: () => import("./commands/init").then((m) => m.default),

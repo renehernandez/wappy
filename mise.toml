@@ -14,11 +14,11 @@ description = "Build app and CLI"
 run = "pnpm build"
 
 [tasks."publish:local"]
-description = "Build and link CLI globally so 'wapi' is available everywhere"
+description = "Build and link CLI globally so 'wappy' is available everywhere"
 depends = ["build"]
 run = "cd packages/cli && npm link"
 
 [tasks.init]
-description = "Build and run wapi init to deploy to Cloudflare"
+description = "Build and run wappy init to deploy to Cloudflare"
 depends = ["build"]
-run = 'pnpm wapi -- init "$@"'
+run = 'pnpm wappy -- init "$@"'

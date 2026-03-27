@@ -35,7 +35,7 @@ export default defineCommand({
       console.log(value);
     } else if (args.action === "set") {
       if (!args.value) {
-        consola.error("Usage: wapi config set <key> <value>");
+        consola.error("Usage: wappy config set <key> <value>");
         process.exit(1);
       }
       updateConfig({ [args.key]: args.value });

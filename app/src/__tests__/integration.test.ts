@@ -29,7 +29,7 @@ describe("Integration: browser auth via CF Access JWT", () => {
   it("authenticates and creates account from JWT, then loads dashboard data", async () => {
     // Simulate CF Access JWT
     const jwt = makeJwt("browser-user@example.com");
-    const request = new Request("https://wapi.dev", {
+    const request = new Request("https://wappy.dev", {
       headers: { "CF-Access-JWT-Assertion": jwt },
     });
 
@@ -64,7 +64,7 @@ describe("Integration: device code flow end-to-end", () => {
     accountId = account.id;
 
     // Step 2: CLI generates a device code (no auth needed)
-    const codeResult = await createDeviceCode("test-laptop", "wapi.dev", db);
+    const codeResult = await createDeviceCode("test-laptop", "wappy.dev", db);
     expect(codeResult.code).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
     expect(codeResult.verifyUrl).toContain(codeResult.code);
 
@@ -86,7 +86,7 @@ describe("Integration: device code flow end-to-end", () => {
     }
 
     // Step 6: CLI uses device token to authenticate
-    const cliRequest = new Request("https://wapi.dev/api/test", {
+    const cliRequest = new Request("https://wappy.dev/api/test", {
       headers: { Authorization: `Bearer device:${deviceToken}` },
     });
     const deviceIdentity = await extractDeviceIdentity(cliRequest, db);
@@ -99,12 +99,12 @@ describe("Integration: device revocation", () => {
   it("revoked device token returns null on auth", async () => {
     // Setup: create account and approve a device
     const account = await upsertAccount("revoke-test@example.com", db);
-    const codeResult = await createDeviceCode("revoke-laptop", "wapi.dev", db);
+    const codeResult = await createDeviceCode("revoke-laptop", "wappy.dev", db);
     const approved = await approveDevice(codeResult.code, account.id, db);
     const token = approved!.deviceToken;
 
     // Verify it works before revocation
-    const beforeReq = new Request("https://wapi.dev", {
+    const beforeReq = new Request("https://wappy.dev", {
       headers: { Authorization: `Bearer device:${token}` },
     });
     const beforeIdentity = await extractDeviceIdentity(beforeReq, db);
@@ -114,7 +114,7 @@ describe("Integration: device revocation", () => {
     await revokeDevice(approved!.machineId, account.id, db);
 
     // Verify it's rejected after revocation
-    const afterReq = new Request("https://wapi.dev", {
+    const afterReq = new Request("https://wappy.dev", {
       headers: { Authorization: `Bearer device:${token}` },
     });
     const afterIdentity = await extractDeviceIdentity(afterReq, db);

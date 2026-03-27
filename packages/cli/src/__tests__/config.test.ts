@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 let tempDir: string;
 
 beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), "wapi-test-"));
+  tempDir = mkdtempSync(join(tmpdir(), "wappy-test-"));
   vi.stubEnv("XDG_CONFIG_HOME", tempDir);
-  vi.stubEnv("WAPI_SERVER_URL", "");
+  vi.stubEnv("WAPPY_SERVER_URL", "");
 });
 
 afterEach(() => {
@@ -26,7 +26,7 @@ async function loadConfig() {
 describe("config", () => {
   it("uses XDG_CONFIG_HOME for config path", async () => {
     const { getConfigPath } = await loadConfig();
-    expect(getConfigPath()).toBe(join(tempDir, "wapi", "config.json"));
+    expect(getConfigPath()).toBe(join(tempDir, "wappy", "config.json"));
   });
 
   it("reads empty config when no file exists", async () => {
@@ -88,24 +88,24 @@ describe("deployment state", () => {
     const { writeDeployment, readDeployment } = await loadConfig();
     writeDeployment({
       accountId: "abc123",
-      workerName: "wapi",
-      workerUrl: "https://wapi.workers.dev",
+      workerName: "wappy",
+      workerUrl: "https://wappy.workers.dev",
     });
     expect(readDeployment()).toEqual({
       accountId: "abc123",
-      workerName: "wapi",
-      workerUrl: "https://wapi.workers.dev",
+      workerName: "wappy",
+      workerUrl: "https://wappy.workers.dev",
     });
   });
 
   it("updateDeployment merges with existing", async () => {
     const { writeDeployment, updateDeployment, readDeployment } =
       await loadConfig();
-    writeDeployment({ accountId: "abc123", workerName: "wapi" });
+    writeDeployment({ accountId: "abc123", workerName: "wappy" });
     updateDeployment({ workerUrl: "https://w.dev" });
     expect(readDeployment()).toEqual({
       accountId: "abc123",
-      workerName: "wapi",
+      workerName: "wappy",
       workerUrl: "https://w.dev",
     });
   });
@@ -113,36 +113,36 @@ describe("deployment state", () => {
   it("updateDeployment overwrites individual fields", async () => {
     const { writeDeployment, updateDeployment, readDeployment } =
       await loadConfig();
-    writeDeployment({ accountId: "old", workerName: "wapi" });
+    writeDeployment({ accountId: "old", workerName: "wappy" });
     updateDeployment({ accountId: "new" });
     expect(readDeployment()).toEqual({
       accountId: "new",
-      workerName: "wapi",
+      workerName: "wappy",
     });
   });
 
   it("stores deployment path under config dir", async () => {
     const { getDeploymentPath } = await loadConfig();
-    expect(getDeploymentPath()).toBe(join(tempDir, "wapi", "deployment.json"));
+    expect(getDeploymentPath()).toBe(join(tempDir, "wappy", "deployment.json"));
   });
 });
 
 describe("getServerUrl", () => {
   it("returns env var when set", async () => {
-    vi.stubEnv("WAPI_SERVER_URL", "https://env.workers.dev");
+    vi.stubEnv("WAPPY_SERVER_URL", "https://env.workers.dev");
     const { getServerUrl } = await loadConfig();
     expect(getServerUrl()).toBe("https://env.workers.dev");
   });
 
   it("returns config value when env var is empty", async () => {
-    vi.stubEnv("WAPI_SERVER_URL", "");
+    vi.stubEnv("WAPPY_SERVER_URL", "");
     const { writeConfig, getServerUrl } = await loadConfig();
     writeConfig({ serverUrl: "https://config.workers.dev" });
     expect(getServerUrl()).toBe("https://config.workers.dev");
   });
 
   it("returns null when nothing configured", async () => {
-    vi.stubEnv("WAPI_SERVER_URL", "");
+    vi.stubEnv("WAPPY_SERVER_URL", "");
     const { getServerUrl } = await loadConfig();
     expect(getServerUrl()).toBeNull();
   });
