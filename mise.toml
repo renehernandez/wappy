@@ -1,6 +1,6 @@
 [tools]
 node = "24.14.0"
-"brew:lefthook" = "2.0.13"
+"npm:lefthook" = "2.0.13"
 
 [tasks.install]
 description = "Install dependencies and set up local development"
@@ -16,7 +16,7 @@ run = "pnpm build"
 [tasks."publish:local"]
 description = "Build and link CLI globally so 'wapi' is available everywhere"
 depends = ["build"]
-run = "cd packages/cli && pnpm link --global"
+run = "cd packages/cli && npm link"
 
 [tasks.init]
 description = "Build and run wapi init to deploy to Cloudflare"

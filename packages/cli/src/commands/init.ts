@@ -387,10 +387,10 @@ export default defineCommand({
     // Step 7: CF Access instructions
     const displayUrl = serverUrl || deployUrl || "<your-worker-url>";
     console.log("\n──────────────────────────────────────────");
-    console.log("  Next: Configure Cloudflare Access");
+    console.log("  Next: Configure Cloudflare Access Control");
     console.log("──────────────────────────────────────────\n");
-    console.log("  1. Open Cloudflare Zero Trust dashboard");
-    console.log("  2. Go to Access > Applications > Add Application");
+    console.log("  1. Open Cloudflare dashboard");
+    console.log("  2. Go to Access Control > Applications > Add Application");
     console.log('  3. Select "Self-hosted"');
     console.log(`  4. Set domain: ${displayUrl}`);
     console.log("  5. Add an identity provider (One-time PIN, Google, etc.)");
