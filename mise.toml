@@ -10,7 +10,7 @@ lefthook install
 """
 
 [tasks.build]
-description = "Build app and CLI with worker bundle"
+description = "Build app and CLI"
 run = "pnpm build"
 
 [tasks."publish:local"]

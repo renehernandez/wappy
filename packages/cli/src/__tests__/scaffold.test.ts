@@ -1,176 +1,133 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  defaultWranglerConfig,
+  generatePackageJson,
   generateWranglerConfig,
-  needsProvisioning,
-  patchWranglerConfig,
 } from "../deploy/scaffold";
+import { useTempDir } from "./helpers";
 
-let tmpDir: string;
+const tmp = useTempDir("wapi-scaffold-test");
 
-beforeEach(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), "wapi-scaffold-test-"));
-});
+describe("generatePackageJson", () => {
+  it("writes a package.json with @wappy/app dependency", () => {
+    const filePath = generatePackageJson(tmp.dir);
+    const pkg = JSON.parse(readFileSync(filePath, "utf-8"));
 
-afterEach(() => {
-  rmSync(tmpDir, { recursive: true, force: true });
-});
-
-describe("defaultWranglerConfig", () => {
-  it("produces the required bindings without a domain", () => {
-    const config = defaultWranglerConfig();
-    expect(config.name).toBe("wapi");
-    expect(config.compatibility_flags).toContain("nodejs_compat");
-    expect(config.d1_databases?.[0]?.binding).toBe("DB");
-    expect(config.kv_namespaces?.[0]?.binding).toBe("KV");
-    expect(config.r2_buckets?.[0]?.binding).toBe("R2");
-    expect(config.durable_objects?.bindings).toHaveLength(2);
-    expect(config.routes).toBeUndefined();
+    expect(pkg.name).toBe("wapi-deploy");
+    expect(pkg.private).toBe(true);
+    expect(pkg.dependencies["@wappy/app"]).toBeDefined();
   });
 
-  it("adds routes when domain is provided", () => {
-    const config = defaultWranglerConfig({ domain: "wapi.fullscript.cloud" });
-    expect(config.routes).toHaveLength(1);
-    expect(config.routes?.[0]?.pattern).toBe("wapi.fullscript.cloud/*");
-    expect(config.routes?.[0]?.zone_name).toBe("fullscript.cloud");
+  it("uses the provided appVersion", () => {
+    const filePath = generatePackageJson(tmp.dir, { appVersion: "^1.2.3" });
+    const pkg = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(pkg.dependencies["@wappy/app"]).toBe("^1.2.3");
   });
 
-  it("derives zone name from multi-part TLD", () => {
-    const config = defaultWranglerConfig({ domain: "wapi.example.co.uk" });
-    expect(config.routes?.[0]?.zone_name).toBe("example.co.uk");
+  it("defaults to ^0.0.1 when no version is provided", () => {
+    const filePath = generatePackageJson(tmp.dir);
+    const pkg = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(pkg.dependencies["@wappy/app"]).toBe("^0.0.1");
   });
 
-  it("includes placeholder IDs by default", () => {
-    const config = defaultWranglerConfig();
-    expect(config.d1_databases?.[0]?.database_id).toMatch(/^</);
-    expect(config.kv_namespaces?.[0]?.id).toMatch(/^</);
+  it("includes deploy and migrations scripts", () => {
+    const filePath = generatePackageJson(tmp.dir);
+    const pkg = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(pkg.scripts.deploy).toBeDefined();
+    expect(pkg.scripts.migrations).toBeDefined();
+  });
+
+  it("returns the path of the written file", () => {
+    const filePath = generatePackageJson(tmp.dir);
+    expect(filePath).toBe(join(tmp.dir, "package.json"));
+  });
+
+  it("is idempotent — overwriting produces the same result", () => {
+    generatePackageJson(tmp.dir);
+    const filePath = generatePackageJson(tmp.dir);
+    const pkg = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(pkg.name).toBe("wapi-deploy");
   });
 });
 
 describe("generateWranglerConfig", () => {
-  it("writes a valid JSON file with all required bindings", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    const raw = readFileSync(filePath, "utf-8");
-    const config = JSON.parse(raw);
+  it("writes a wrangler.jsonc with required bindings and build command", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
 
     expect(config.name).toBe("wapi");
+    expect(config.main).toBe("app/dist/server/index.js");
+    expect(config.assets.directory).toBe("app/dist/client");
+    expect(config.build.command).toContain("@wappy/app");
+    expect(config.no_bundle).toBe(true);
+  });
+
+  it("includes all required CF bindings", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
+
     expect(config.d1_databases?.[0]?.binding).toBe("DB");
     expect(config.kv_namespaces?.[0]?.binding).toBe("KV");
     expect(config.r2_buckets?.[0]?.binding).toBe("R2");
     expect(config.durable_objects?.bindings).toHaveLength(2);
+    expect(config.migrations).toHaveLength(1);
   });
 
-  it("returns the path of the written file", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    expect(filePath).toBe(join(tmpDir, "wrangler.jsonc"));
+  it("omits resource IDs — wrangler auto-provisions them", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
+
+    expect(config.d1_databases?.[0]?.database_id).toBeUndefined();
+    expect(config.kv_namespaces?.[0]?.id).toBeUndefined();
+  });
+
+  it("sets migrations_dir to app/db/migrations", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(config.d1_databases?.[0]?.migrations_dir).toBe("app/db/migrations");
+  });
+
+  it("does not add routes when no domain is provided", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(config.routes).toBeUndefined();
   });
 
   it("adds routes when domain option is given", () => {
-    const filePath = generateWranglerConfig(tmpDir, {
+    const filePath = generateWranglerConfig(tmp.dir, {
       domain: "wapi.example.com",
     });
     const config = JSON.parse(readFileSync(filePath, "utf-8"));
     expect(config.routes?.[0]?.pattern).toBe("wapi.example.com/*");
     expect(config.routes?.[0]?.zone_name).toBe("example.com");
   });
-});
 
-describe("patchWranglerConfig", () => {
-  it("fills in D1 database ID", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, { d1DatabaseId: "abc-123-uuid" });
-
-    const config = JSON.parse(readFileSync(filePath, "utf-8"));
-    expect(config.d1_databases?.[0]?.database_id).toBe("abc-123-uuid");
-  });
-
-  it("fills in KV namespace ID", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, { kvNamespaceId: "kv-id-xyz" });
-
-    const config = JSON.parse(readFileSync(filePath, "utf-8"));
-    expect(config.kv_namespaces?.[0]?.id).toBe("kv-id-xyz");
-  });
-
-  it("fills in R2 bucket name", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, { r2BucketName: "my-custom-bucket" });
-
-    const config = JSON.parse(readFileSync(filePath, "utf-8"));
-    expect(config.r2_buckets?.[0]?.bucket_name).toBe("my-custom-bucket");
-  });
-
-  it("preserves other fields when patching IDs", () => {
-    const filePath = generateWranglerConfig(tmpDir, {
-      domain: "wapi.example.com",
+  it("derives zone name by dropping first subdomain label", () => {
+    const filePath = generateWranglerConfig(tmp.dir, {
+      domain: "wapi.fullscript.cloud",
     });
-    patchWranglerConfig(filePath, {
-      d1DatabaseId: "d1-id",
-      kvNamespaceId: "kv-id",
-    });
-
     const config = JSON.parse(readFileSync(filePath, "utf-8"));
-    // Routes and worker name should be unchanged
+    expect(config.routes?.[0]?.zone_name).toBe("fullscript.cloud");
+  });
+
+  it("handles multi-level TLD correctly", () => {
+    const filePath = generateWranglerConfig(tmp.dir, {
+      domain: "wapi.example.co.uk",
+    });
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
+    expect(config.routes?.[0]?.zone_name).toBe("example.co.uk");
+  });
+
+  it("returns the path of the written file", () => {
+    const filePath = generateWranglerConfig(tmp.dir);
+    expect(filePath).toBe(join(tmp.dir, "wrangler.jsonc"));
+  });
+
+  it("is idempotent — overwriting produces the same result", () => {
+    generateWranglerConfig(tmp.dir);
+    const filePath = generateWranglerConfig(tmp.dir);
+    const config = JSON.parse(readFileSync(filePath, "utf-8"));
     expect(config.name).toBe("wapi");
-    expect(config.routes?.[0]?.pattern).toBe("wapi.example.com/*");
-    // Patched values should be present
-    expect(config.d1_databases?.[0]?.database_id).toBe("d1-id");
-    expect(config.kv_namespaces?.[0]?.id).toBe("kv-id");
-  });
-});
-
-describe("needsProvisioning", () => {
-  it("detects placeholder D1 and KV IDs", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    const result = needsProvisioning(filePath);
-    expect(result.d1).toBe(true);
-    expect(result.kv).toBe(true);
-  });
-
-  it("returns false for d1 when a real ID is present", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, { d1DatabaseId: "real-d1-id-abc123" });
-    const result = needsProvisioning(filePath);
-    expect(result.d1).toBe(false);
-  });
-
-  it("returns false for kv when a real ID is present", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, { kvNamespaceId: "real-kv-id-def456" });
-    const result = needsProvisioning(filePath);
-    expect(result.kv).toBe(false);
-  });
-
-  it("always returns false for r2 (bucket identified by name, not ID)", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    const result = needsProvisioning(filePath);
-    expect(result.r2).toBe(false);
-  });
-
-  it("returns all false when all IDs are real", () => {
-    const filePath = generateWranglerConfig(tmpDir);
-    patchWranglerConfig(filePath, {
-      d1DatabaseId: "real-d1-id",
-      kvNamespaceId: "real-kv-id",
-    });
-    const result = needsProvisioning(filePath);
-    expect(result.d1).toBe(false);
-    expect(result.kv).toBe(false);
-    expect(result.r2).toBe(false);
-  });
-
-  it("handles empty string IDs as needing provisioning", () => {
-    const config = {
-      d1_databases: [{ database_id: "" }],
-      kv_namespaces: [{ id: "" }],
-    };
-    const filePath = join(tmpDir, "wrangler.jsonc");
-    writeFileSync(filePath, JSON.stringify(config));
-    const result = needsProvisioning(filePath);
-    expect(result.d1).toBe(true);
-    expect(result.kv).toBe(true);
   });
 });

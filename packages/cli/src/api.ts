@@ -1,4 +1,4 @@
-import type { DeviceCodeResponse, DeviceInfo } from "@wapi/wire";
+import type { DeviceCodeResponse, DeviceInfo } from "@wappy/wire";
 
 export class ApiError extends Error {
   constructor(

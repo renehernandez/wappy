@@ -1,7 +1,6 @@
 {
-  "name": "wapi",
+  "name": "@wappy/cli",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
   "bin": {
     "wapi": "./dist/index.js"
@@ -18,7 +17,7 @@
     "consola": "^3.4.0",
     "execa": "^9.5.0",
     "open": "^10.1.0",
-    "@wapi/wire": "workspace:*"
+    "@wappy/wire": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

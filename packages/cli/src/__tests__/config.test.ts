@@ -88,25 +88,24 @@ describe("deployment state", () => {
     const { writeDeployment, readDeployment } = await loadConfig();
     writeDeployment({
       accountId: "abc123",
-      d1DatabaseId: "db-456",
-      kvNamespaceId: "kv-789",
+      workerName: "wapi",
+      workerUrl: "https://wapi.workers.dev",
     });
     expect(readDeployment()).toEqual({
       accountId: "abc123",
-      d1DatabaseId: "db-456",
-      kvNamespaceId: "kv-789",
+      workerName: "wapi",
+      workerUrl: "https://wapi.workers.dev",
     });
   });
 
   it("updateDeployment merges with existing", async () => {
     const { writeDeployment, updateDeployment, readDeployment } =
       await loadConfig();
-    writeDeployment({ accountId: "abc123", d1DatabaseId: "db-456" });
-    updateDeployment({ kvNamespaceId: "kv-789", workerUrl: "https://w.dev" });
+    writeDeployment({ accountId: "abc123", workerName: "wapi" });
+    updateDeployment({ workerUrl: "https://w.dev" });
     expect(readDeployment()).toEqual({
       accountId: "abc123",
-      d1DatabaseId: "db-456",
-      kvNamespaceId: "kv-789",
+      workerName: "wapi",
       workerUrl: "https://w.dev",
     });
   });
@@ -114,11 +113,11 @@ describe("deployment state", () => {
   it("updateDeployment overwrites individual fields", async () => {
     const { writeDeployment, updateDeployment, readDeployment } =
       await loadConfig();
-    writeDeployment({ accountId: "old", d1DatabaseId: "db-1" });
+    writeDeployment({ accountId: "old", workerName: "wapi" });
     updateDeployment({ accountId: "new" });
     expect(readDeployment()).toEqual({
       accountId: "new",
-      d1DatabaseId: "db-1",
+      workerName: "wapi",
     });
   });
 

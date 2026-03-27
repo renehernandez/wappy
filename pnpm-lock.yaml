@@ -23,7 +23,7 @@ importers:
       '@tanstack/react-start':
         specifier: ^1.120.0
         version: 1.167.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
-      '@wapi/wire':
+      '@wappy/wire':
         specifier: workspace:*
         version: link:../packages/wire
       drizzle-orm:
@@ -87,7 +87,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@wapi/wire':
+      '@wappy/wire':
         specifier: workspace:*
         version: link:../wire
       citty:

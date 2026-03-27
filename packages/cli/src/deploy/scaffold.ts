@@ -1,67 +1,78 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+export function generatePackageJson(
+  dir: string,
+  options?: { appVersion?: string },
+): string {
+  const appVersion = options?.appVersion ?? "^0.0.1";
+  const pkg = {
+    name: "wapi-deploy",
+    private: true,
+    dependencies: {
+      "@wappy/app": appVersion,
+    },
+    scripts: {
+      deploy: "npx wrangler@4 deploy",
+      migrations:
+        "npx wrangler@4 d1 migrations apply wapi-db --remote --migrations-dir app/db/migrations",
+    },
+  };
+  const filePath = join(dir, "package.json");
+  writeFileSync(filePath, `${JSON.stringify(pkg, null, 2)}\n`);
+  return filePath;
+}
+
 interface WranglerConfig {
-  $schema?: string;
-  name?: string;
-  compatibility_date?: string;
-  compatibility_flags?: string[];
-  main?: string;
-  no_bundle?: boolean;
-  assets?: { directory: string };
-  observability?: { enabled: boolean };
-  d1_databases?: Array<{
+  name: string;
+  compatibility_date: string;
+  compatibility_flags: string[];
+  main: string;
+  no_bundle: boolean;
+  assets: { directory: string };
+  build: { command: string };
+  observability: { enabled: boolean };
+  d1_databases: Array<{
     binding: string;
     database_name: string;
-    database_id: string;
-    migrations_dir?: string;
+    migrations_dir: string;
   }>;
-  kv_namespaces?: Array<{ binding: string; id: string }>;
-  r2_buckets?: Array<{ binding: string; bucket_name: string }>;
-  durable_objects?: {
+  kv_namespaces: Array<{ binding: string }>;
+  r2_buckets: Array<{ binding: string }>;
+  durable_objects: {
     bindings: Array<{ name: string; class_name: string }>;
   };
-  migrations?: Array<{ tag: string; new_sqlite_classes: string[] }>;
+  migrations: Array<{ tag: string; new_sqlite_classes: string[] }>;
   routes?: Array<{ pattern: string; zone_name: string }>;
 }
 
 /**
- * Build the default wrangler config object. When a custom domain is provided,
- * a `routes` entry is added and the zone name is derived by dropping the first
- * subdomain label (e.g. "wapi.fullscript.cloud" → zone "fullscript.cloud").
+ * Build the wrangler config object. When a custom domain is provided,
+ * a `routes` entry is added and the zone name is derived by dropping the
+ * first subdomain label (e.g. "wapi.fullscript.cloud" → zone "fullscript.cloud").
  */
-export function defaultWranglerConfig(options?: {
-  domain?: string;
-}): WranglerConfig {
+function buildWranglerConfig(options?: { domain?: string }): WranglerConfig {
   const config: WranglerConfig = {
-    $schema: "node_modules/wrangler/config-schema.json",
     name: "wapi",
     compatibility_date: "2026-03-17",
     compatibility_flags: ["nodejs_compat"],
-    main: "dist/server/index.js",
+    main: "app/dist/server/index.js",
     no_bundle: true,
-    assets: { directory: "dist/client" },
+    assets: { directory: "app/dist/client" },
+    build: {
+      command:
+        "node -e \"require('fs').cpSync('node_modules/@wappy/app','app',{recursive:true})\"",
+    },
     observability: { enabled: true },
     d1_databases: [
       {
         binding: "DB",
         database_name: "wapi-db",
-        database_id: "<will be filled by wapi init>",
-        migrations_dir: "./migrations",
+        migrations_dir: "app/db/migrations",
       },
     ],
-    kv_namespaces: [
-      {
-        binding: "KV",
-        id: "<will be filled by wapi init>",
-      },
-    ],
-    r2_buckets: [
-      {
-        binding: "R2",
-        bucket_name: "wapi-storage",
-      },
-    ],
+    kv_namespaces: [{ binding: "KV" }],
+    r2_buckets: [{ binding: "R2" }],
     durable_objects: {
       bindings: [
         { name: "UserRoom", class_name: "UserRoom" },
@@ -87,74 +98,12 @@ export function defaultWranglerConfig(options?: {
   return config;
 }
 
-/**
- * Write a starter `wrangler.jsonc` to the given directory with placeholder
- * resource IDs. Returns the path of the written file.
- */
 export function generateWranglerConfig(
   dir: string,
   options?: { domain?: string },
 ): string {
-  const config = defaultWranglerConfig(options);
+  const config = buildWranglerConfig(options);
   const filePath = join(dir, "wrangler.jsonc");
   writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`);
   return filePath;
-}
-
-/**
- * Patch resource IDs into an existing `wrangler.jsonc` without clobbering
- * other fields. Comments in the file will be lost on write — this is
- * acceptable since we generate valid JSON without comments.
- */
-export function patchWranglerConfig(
-  filePath: string,
-  updates: {
-    d1DatabaseId?: string;
-    kvNamespaceId?: string;
-    r2BucketName?: string;
-  },
-): void {
-  const raw = readFileSync(filePath, "utf-8");
-  // Strip single-line // comments before parsing
-  const stripped = raw.replace(/^\s*\/\/.*$/gm, "");
-  const config = JSON.parse(stripped) as WranglerConfig;
-
-  if (updates.d1DatabaseId && config.d1_databases?.[0]) {
-    config.d1_databases[0].database_id = updates.d1DatabaseId;
-  }
-
-  if (updates.kvNamespaceId && config.kv_namespaces?.[0]) {
-    config.kv_namespaces[0].id = updates.kvNamespaceId;
-  }
-
-  if (updates.r2BucketName && config.r2_buckets?.[0]) {
-    config.r2_buckets[0].bucket_name = updates.r2BucketName;
-  }
-
-  writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`);
-}
-
-/**
- * Check if the wrangler.jsonc at `filePath` still has placeholder IDs that
- * need to be filled by provisioning.
- */
-export function needsProvisioning(filePath: string): {
-  d1: boolean;
-  kv: boolean;
-  r2: boolean;
-} {
-  const raw = readFileSync(filePath, "utf-8");
-  const stripped = raw.replace(/^\s*\/\/.*$/gm, "");
-  const config = JSON.parse(stripped) as WranglerConfig;
-
-  const d1Id = config.d1_databases?.[0]?.database_id ?? "";
-  const kvId = config.kv_namespaces?.[0]?.id ?? "";
-
-  return {
-    d1: d1Id === "" || d1Id.startsWith("<"),
-    kv: kvId === "" || kvId.startsWith("<"),
-    // R2 uses a bucket name (always a string), so it never needs provisioning
-    // in the same way — the bucket is identified by name, not ID.
-    r2: false,
-  };
 }
