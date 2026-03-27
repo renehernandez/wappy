@@ -1,6 +1,6 @@
 [tools]
 node = "24.14.0"
-lefthook = "2.0.13"
+"brew:lefthook" = "2.0.13"
 
 [tasks.install]
 description = "Install dependencies and set up local development"
