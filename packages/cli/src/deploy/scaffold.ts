@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export function generatePackageJson(
@@ -12,10 +12,12 @@ export function generatePackageJson(
     dependencies: {
       "@wappy/app": appVersion,
     },
+    devDependencies: {
+      wrangler: "^4.0.0",
+    },
     scripts: {
       deploy: "npx wrangler@4 deploy",
-      migrations:
-        "npx wrangler@4 d1 migrations apply wappy-db --remote --migrations-dir app/db/migrations",
+      migrations: "npx wrangler@4 d1 migrations apply wappy-db --remote",
     },
   };
   const filePath = join(dir, "package.json");
@@ -29,6 +31,7 @@ interface WranglerConfig {
   compatibility_flags: string[];
   main: string;
   no_bundle: boolean;
+  rules: Array<{ type: string; globs: string[] }>;
   assets: { directory: string };
   build: { command: string };
   observability: { enabled: boolean };
@@ -43,7 +46,7 @@ interface WranglerConfig {
     bindings: Array<{ name: string; class_name: string }>;
   };
   migrations: Array<{ tag: string; new_sqlite_classes: string[] }>;
-  routes?: Array<{ pattern: string; zone_name: string }>;
+  routes?: Array<{ pattern: string; custom_domain: boolean }>;
 }
 
 /**
@@ -58,10 +61,11 @@ function buildWranglerConfig(options?: { domain?: string }): WranglerConfig {
     compatibility_flags: ["nodejs_compat"],
     main: "app/dist/server/index.js",
     no_bundle: true,
+    rules: [{ type: "ESModule", globs: ["**/*.js", "**/*.mjs"] }],
     assets: { directory: "app/dist/client" },
     build: {
       command:
-        "node -e \"require('fs').cpSync('node_modules/@wappy/app','app',{recursive:true})\"",
+        "node -e \"const fs=require('fs');fs.rmSync('app',{recursive:true,force:true});fs.cpSync('node_modules/@wappy/app','app',{recursive:true})\"",
     },
     observability: { enabled: true },
     d1_databases: [
@@ -88,14 +92,43 @@ function buildWranglerConfig(options?: { domain?: string }): WranglerConfig {
   };
 
   if (options?.domain) {
-    const domain = options.domain;
-    const parts = domain.split(".");
-    // Zone name = everything after the first label (drop the subdomain)
-    const zoneName = parts.length > 2 ? parts.slice(1).join(".") : domain;
-    config.routes = [{ pattern: `${domain}/*`, zone_name: zoneName }];
+    config.routes = [{ pattern: options.domain, custom_domain: true }];
   }
 
   return config;
+}
+
+export function generateMiseToml(dir: string): string {
+  const content = `[tools]
+node = "24.14.0"
+`;
+  const filePath = join(dir, "mise.toml");
+  writeFileSync(filePath, content);
+  return filePath;
+}
+
+export function patchWranglerConfig(
+  filePath: string,
+  updates: {
+    d1DatabaseId?: string;
+    kvNamespaceId?: string;
+    r2BucketName?: string;
+  },
+): void {
+  const raw = readFileSync(filePath, "utf-8");
+  const config = JSON.parse(raw);
+
+  if (updates.d1DatabaseId && config.d1_databases?.[0]) {
+    config.d1_databases[0].database_id = updates.d1DatabaseId;
+  }
+  if (updates.kvNamespaceId && config.kv_namespaces?.[0]) {
+    config.kv_namespaces[0].id = updates.kvNamespaceId;
+  }
+  if (updates.r2BucketName && config.r2_buckets?.[0]) {
+    config.r2_buckets[0].bucket_name = updates.r2BucketName;
+  }
+
+  writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`);
 }
 
 export function generateWranglerConfig(

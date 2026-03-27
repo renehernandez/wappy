@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import { routePartykitRequest } from "partyserver";
 
@@ -9,7 +10,7 @@ export default createServerEntry({
     // WebSocket upgrades → Durable Objects
     const partyResponse = await routePartykitRequest(
       request,
-      (globalThis as any).__env,
+      env as unknown as Record<string, unknown>,
     );
     if (partyResponse) return partyResponse;
 

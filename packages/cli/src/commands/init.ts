@@ -6,8 +6,10 @@ import { execaCommand } from "execa";
 import open from "open";
 import { readDeployment, updateConfig, updateDeployment } from "../config";
 import {
+  generateMiseToml,
   generatePackageJson,
   generateWranglerConfig,
+  patchWranglerConfig,
 } from "../deploy/scaffold";
 
 const WRANGLER = "npx wrangler@4";
@@ -59,6 +61,53 @@ function wranglerEnv(accountId: string): Record<string, string> {
     string,
     string
   >;
+}
+
+async function findD1Id(
+  name: string,
+  env: Record<string, string>,
+): Promise<string | null> {
+  try {
+    const result = await execaCommand(`${WRANGLER} d1 list --json`, { env });
+    const databases = JSON.parse(result.stdout) as Array<{
+      uuid: string;
+      name: string;
+    }>;
+    return databases.find((d) => d.name === name)?.uuid ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function findKvId(
+  title: string,
+  env: Record<string, string>,
+): Promise<string | null> {
+  try {
+    const result = await execaCommand(`${WRANGLER} kv namespace list`, { env });
+    const namespaces = JSON.parse(result.stdout) as Array<{
+      id: string;
+      title: string;
+    }>;
+    return (
+      namespaces.find((n) => n.title === title || n.title.includes(title))
+        ?.id ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+
+async function findR2Bucket(
+  name: string,
+  env: Record<string, string>,
+): Promise<boolean> {
+  try {
+    const result = await execaCommand(`${WRANGLER} r2 bucket list`, { env });
+    return result.stdout.includes(name);
+  } catch {
+    return false;
+  }
 }
 
 function ensureGenerated(
@@ -157,21 +206,56 @@ export default defineCommand({
     const env = wranglerEnv(accountId);
     updateDeployment({ accountId });
 
-    // Step 3: Generate package.json if it doesn't exist
+    // Step 3: Generate mise.toml if it doesn't exist
+    ensureGenerated(
+      "mise.toml",
+      () => generateMiseToml(process.cwd()),
+      "mise.toml",
+    );
+
+    // Step 4: Generate package.json if it doesn't exist
     ensureGenerated(
       "package.json",
       () => generatePackageJson(process.cwd()),
       "package.json",
     );
 
-    // Step 4: Generate wrangler.jsonc if it doesn't exist
+    // Step 5: Generate wrangler.jsonc if it doesn't exist
     ensureGenerated(
       "wrangler.jsonc",
       () => generateWranglerConfig(process.cwd(), { domain: customDomain }),
       "wrangler.jsonc",
     );
 
-    // Step 5: Install npm dependencies
+    // Step 6: Look up existing resources and patch IDs into wrangler.jsonc
+    const wranglerConfigPath = join(process.cwd(), "wrangler.jsonc");
+    consola.start("Checking for existing Cloudflare resources...");
+    const d1Id = await findD1Id("wappy-db", env);
+    const kvId = await findKvId("wappy-kv", env);
+    const r2Exists = await findR2Bucket("wappy-r2", env);
+
+    const patches: {
+      d1DatabaseId?: string;
+      kvNamespaceId?: string;
+      r2BucketName?: string;
+    } = {};
+    if (d1Id) {
+      patches.d1DatabaseId = d1Id;
+      consola.success(`Found existing D1 database: ${d1Id}`);
+    }
+    if (kvId) {
+      patches.kvNamespaceId = kvId;
+      consola.success(`Found existing KV namespace: ${kvId}`);
+    }
+    if (r2Exists) {
+      patches.r2BucketName = "wappy-r2";
+      consola.success("Found existing R2 bucket: wappy-r2");
+    }
+    if (patches.d1DatabaseId || patches.kvNamespaceId || patches.r2BucketName) {
+      patchWranglerConfig(wranglerConfigPath, patches);
+    }
+
+    // Step 7: Install npm dependencies
     consola.start("Installing dependencies...");
     try {
       await execaCommand("npm install", {
@@ -205,14 +289,11 @@ export default defineCommand({
     // Step 7: Apply D1 migrations
     try {
       consola.start("Applying D1 migrations...");
-      await execaCommand(
-        `${WRANGLER} d1 migrations apply wappy-db --remote --migrations-dir app/db/migrations`,
-        {
-          cwd: process.cwd(),
-          env,
-          stdin: "inherit",
-        },
-      );
+      await execaCommand(`${WRANGLER} d1 migrations apply wappy-db --remote`, {
+        cwd: process.cwd(),
+        env,
+        stdin: "inherit",
+      });
       consola.success("Migrations applied");
     } catch (err) {
       consola.error(`Migrations failed: ${String(err)}`);
@@ -249,10 +330,10 @@ export default defineCommand({
     console.log("  5. Create a policy allowing your email\n");
 
     try {
-      await open("https://one.dash.cloudflare.com");
+      await open("https://dash.cloudflare.com/one");
       consola.info("Opened Cloudflare Zero Trust dashboard in your browser.");
     } catch {
-      consola.info("Open https://one.dash.cloudflare.com to set up Access.");
+      consola.info("Open https://dash.cloudflare.com/one to set up Access.");
     }
 
     console.log(
