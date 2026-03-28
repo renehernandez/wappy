@@ -3,7 +3,12 @@ import { defineCommand } from "citty";
 import consola from "consola";
 import open from "open";
 import { createApiClient } from "../api";
-import { getServerUrl, readCredentials, writeCredentials } from "../config";
+import {
+  getServerUrl,
+  readCredentials,
+  updateConfig,
+  writeCredentials,
+} from "../config";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -20,12 +25,21 @@ export default defineCommand({
       description: "Device name",
       default: hostname(),
     },
+    server: {
+      type: "string",
+      description: "Server URL to connect to (saves to config)",
+    },
   },
   async run({ args }) {
+    // If --server provided, save it to config before anything else
+    if (args.server) {
+      updateConfig({ serverUrl: args.server });
+    }
+
     const serverUrl = getServerUrl();
     if (!serverUrl) {
       consola.error(
-        'No server URL configured. Run "wappy init" or "wappy config set serverUrl <url>".',
+        "No server URL configured. Use --server <url> or run wappy config set serverUrl <url>",
       );
       process.exit(1);
     }
@@ -43,9 +57,28 @@ export default defineCommand({
     }
 
     const api = createApiClient(serverUrl);
+
+    // WARP detection: call /api/connect — if user is returned, auth is complete
+    if (args.server) {
+      consola.start("Checking for WARP authentication...");
+      try {
+        const connectResult = await api.connect();
+        if (connectResult.user) {
+          writeCredentials({
+            deviceToken: "",
+            machineName: connectResult.user.email,
+          });
+          consola.success(`Authenticated as ${connectResult.user.email}`);
+          return;
+        }
+      } catch {
+        // Server unreachable or unexpected error — fall through to device code flow
+      }
+    }
+
+    // Device code flow (fallback for non-WARP devices or when --server not provided)
     const machineName = args.name;
 
-    // Request device code
     consola.start("Requesting device code...");
     let code: string;
     let verifyUrl: string;
@@ -84,7 +117,7 @@ export default defineCommand({
             deviceToken: result.deviceToken,
             machineName,
           });
-          consola.success("Authenticated!");
+          consola.success(`Authenticated as ${machineName}`);
           return;
         }
 

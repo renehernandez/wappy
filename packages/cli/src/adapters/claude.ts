@@ -69,11 +69,15 @@ export const claudeAdapter: AgentAdapter = {
   name: "claude",
 
   spawn(args: string[], opts: SpawnOptions) {
-    return spawn("claude", ["--output-format", "stream-json", ...args], {
-      cwd: opts.cwd,
-      stdio: ["inherit", "pipe", "inherit"],
-      env: { ...process.env, ...opts.env },
-    });
+    return spawn(
+      "claude",
+      ["--output-format", "stream-json", "--verbose", ...args],
+      {
+        cwd: opts.cwd,
+        stdio: ["inherit", "pipe", "inherit"],
+        env: { ...process.env, ...opts.env },
+      },
+    );
   },
 
   parseMessage: parseClaudeMessage,

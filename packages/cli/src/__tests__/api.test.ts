@@ -87,3 +87,31 @@ describe("createApiClient without token", () => {
     expect(lastCall[1].headers.Authorization).toBeUndefined();
   });
 });
+
+describe("connect", () => {
+  const api = createApiClient("https://wappy.test.workers.dev");
+
+  it("returns status ok without user when no auth", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ status: "ok" }));
+    const result = await api.connect();
+    expect(result.status).toBe("ok");
+    expect(result.user).toBeUndefined();
+    expect(mockFetch).toHaveBeenCalledWith(
+      "https://wappy.test.workers.dev/api/connect",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("returns status ok with user when WARP JWT present", async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse({
+        status: "ok",
+        user: { email: "user@example.com", accountId: "acc-123" },
+      }),
+    );
+    const result = await api.connect();
+    expect(result.status).toBe("ok");
+    expect(result.user?.email).toBe("user@example.com");
+    expect(result.user?.accountId).toBe("acc-123");
+  });
+});

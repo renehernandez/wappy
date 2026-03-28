@@ -78,6 +78,13 @@ export function createApiClient(serverUrl: string, deviceToken?: string) {
       await request("POST", "/api/devices/revoke", { machineId });
     },
 
+    async connect(): Promise<{
+      status: string;
+      user?: { email: string; accountId: string };
+    }> {
+      return request("GET", "/api/connect");
+    },
+
     async createSession(data: {
       title?: string;
       agentType?: string;

@@ -20,12 +20,11 @@ export default defineCommand({
   },
   async run({ args, rawArgs }) {
     const serverUrl = getServerUrl();
-    const credentials = readCredentials();
-
-    if (!serverUrl || !credentials) {
+    if (!serverUrl) {
       consola.error('Not authenticated. Run "wappy auth" first.');
       process.exit(1);
     }
+    const credentials = readCredentials();
 
     const adapter = getAdapter(args.tool);
     if (!adapter) {
@@ -48,7 +47,7 @@ export default defineCommand({
     const cwd = process.cwd();
 
     // Set up session sync
-    const api = createApiClient(serverUrl, credentials.deviceToken);
+    const api = createApiClient(serverUrl, credentials?.deviceToken);
     const sync = new SessionSync(api, adapter.name);
 
     // Spawn the tool
