@@ -60,7 +60,7 @@ function ToolBubble({ content, seq }: { content: string; seq: number }) {
   return (
     <div className="flex flex-col items-start">
       <span className="text-xs text-gray-600 mb-1 font-mono">#{seq}</span>
-      <div className="bg-slate-800/60 border border-slate-700 rounded-lg overflow-hidden max-w-xl w-full">
+      <div className="bg-slate-800/60 border border-slate-700 rounded-lg overflow-hidden max-w-xl lg:max-w-3xl w-full">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -108,7 +108,7 @@ export function MessageBubble({ role, content, seq }: MessageBubbleProps) {
     return (
       <div className="flex flex-col items-end">
         <span className="text-xs text-gray-600 mb-1 font-mono">#{seq}</span>
-        <div className="bg-cyan-900/50 border border-cyan-800/40 rounded-lg rounded-br-sm px-4 py-3 max-w-xl">
+        <div className="bg-cyan-900/50 border border-cyan-800/40 rounded-lg rounded-br-sm px-4 py-3 max-w-xl lg:max-w-3xl">
           <p className="text-sm text-gray-100 whitespace-pre-wrap">{content}</p>
         </div>
       </div>
@@ -119,7 +119,7 @@ export function MessageBubble({ role, content, seq }: MessageBubbleProps) {
   return (
     <div className="flex flex-col items-start">
       <span className="text-xs text-gray-600 mb-1 font-mono">#{seq}</span>
-      <div className="bg-slate-800 border border-slate-700 rounded-lg rounded-bl-sm px-4 py-3 max-w-xl">
+      <div className="bg-slate-800 border border-slate-700 rounded-lg rounded-bl-sm px-4 py-3 max-w-xl lg:max-w-3xl">
         <MarkdownContent content={content} />
       </div>
     </div>
