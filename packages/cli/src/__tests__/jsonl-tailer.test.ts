@@ -218,14 +218,13 @@ describe("parseClaudeJsonl", () => {
     });
   });
 
-  it("extracts agent result from toolUseResult", () => {
+  it("skips completed toolUseResult (subagent output)", () => {
     const msg = parseClaudeJsonl(
       JSON.stringify({
         type: "user",
         toolUseResult: {
           status: "completed",
           agentType: "glab-review",
-          agentId: "abc123",
           content: [{ type: "text", text: "## MR Review\nLooks good." }],
         },
         message: {
@@ -233,19 +232,10 @@ describe("parseClaudeJsonl", () => {
         },
       }),
     );
-    expect(msg).toEqual({
-      type: "text",
-      role: "assistant",
-      content: "## MR Review\nLooks good.",
-      metadata: {
-        isAgentResult: true,
-        agentType: "glab-review",
-        agentId: "abc123",
-      },
-    });
+    expect(msg).toBeNull();
   });
 
-  it("skips toolUseResult with non-completed status", () => {
+  it("does not skip toolUseResult with non-completed status", () => {
     const msg = parseClaudeJsonl(
       JSON.stringify({
         type: "user",
