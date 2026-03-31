@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseClaudeMessage } from "../adapters/claude";
+import { isPrintMode, parseClaudeMessage } from "../adapters/claude";
 import { parseCodexMessage } from "../adapters/codex";
 import { getAdapter, listAdapters } from "../adapters/registry";
 
@@ -88,6 +88,24 @@ describe("Claude message parsing", () => {
 
   it("returns null for non-JSON", () => {
     expect(parseClaudeMessage("not json")).toBeNull();
+  });
+});
+
+describe("Claude print mode detection", () => {
+  it("detects --print flag", () => {
+    expect(isPrintMode(["--print", "hello"])).toBe(true);
+  });
+
+  it("detects -p short flag", () => {
+    expect(isPrintMode(["-p", "hello"])).toBe(true);
+  });
+
+  it("returns false when no print flag", () => {
+    expect(isPrintMode(["--model", "opus"])).toBe(false);
+  });
+
+  it("returns false for empty args", () => {
+    expect(isPrintMode([])).toBe(false);
   });
 });
 

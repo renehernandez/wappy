@@ -4,6 +4,7 @@ import consola from "consola";
 import { getAdapter, listAdapters } from "../adapters/registry";
 import { createApiClient } from "../api";
 import { getServerUrl, readCredentials } from "../config";
+import { JsonlTailer, resolveSessionPath } from "../sync/jsonl-tailer";
 import { SessionSync } from "../sync/session-sync";
 
 export default defineCommand({
@@ -43,7 +44,10 @@ export default defineCommand({
     }
 
     // Extra args passed to the tool (everything after the tool name)
-    const toolArgs = rawArgs.slice(1);
+    // Strip leading "--" separator so it isn't forwarded to the tool
+    const toolArgs = rawArgs
+      .slice(1)
+      .filter((a, i, _arr) => !(i === 0 && a === "--"));
     const cwd = process.cwd();
 
     // Set up session sync
@@ -51,22 +55,34 @@ export default defineCommand({
     const sync = new SessionSync(api, adapter.name);
 
     // Spawn the tool
-    const child = adapter.spawn(toolArgs, { cwd });
+    const { child, sessionId } = adapter.spawn(toolArgs, { cwd });
 
-    if (!child.stdout) {
-      consola.error("Failed to capture tool output (no stdout pipe).");
-      process.exit(1);
-    }
+    let tailer: JsonlTailer | null = null;
 
-    // Read JSON lines from stdout
-    const rl = createInterface({ input: child.stdout });
-
-    rl.on("line", (line) => {
-      const msg = adapter.parseMessage(line);
-      if (msg) {
+    if (sessionId) {
+      // Interactive mode: tail the JSONL session file
+      const sessionPath = resolveSessionPath(cwd, sessionId);
+      tailer = new JsonlTailer(sessionPath, (msg) => {
         sync.handleMessage(msg);
+      });
+    } else {
+      // Print mode: read JSON lines from stdout
+      if (!child.stdout) {
+        consola.error("Failed to capture tool output (no stdout pipe).");
+        process.exit(1);
       }
-    });
+
+      const rl = createInterface({ input: child.stdout });
+      rl.on("line", (line) => {
+        const msg = adapter.parseMessage(line);
+        if (msg) {
+          if (msg.type === "text" && msg.role === "assistant") {
+            process.stdout.write(msg.content);
+          }
+          sync.handleMessage(msg);
+        }
+      });
+    }
 
     // Forward signals
     const onSignal = (signal: NodeJS.Signals) => {
@@ -87,6 +103,10 @@ export default defineCommand({
     // Clean up
     process.removeListener("SIGINT", onSignal);
     process.removeListener("SIGTERM", onSignal);
+
+    if (tailer) {
+      await tailer.stop();
+    }
 
     await sync.end();
     process.exit(exitCode);

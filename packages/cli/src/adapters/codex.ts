@@ -1,6 +1,11 @@
 import { spawn } from "node:child_process";
 import { execaCommand } from "execa";
-import type { AgentAdapter, AgentMessage, SpawnOptions } from "./types";
+import type {
+  AgentAdapter,
+  AgentMessage,
+  SpawnOptions,
+  SpawnResult,
+} from "./types";
 
 function parseCodexMessage(line: string): AgentMessage | null {
   let data: any;
@@ -59,12 +64,13 @@ function parseCodexMessage(line: string): AgentMessage | null {
 export const codexAdapter: AgentAdapter = {
   name: "codex",
 
-  spawn(args: string[], opts: SpawnOptions) {
-    return spawn("codex", ["--full-stdout", ...args], {
+  spawn(args: string[], opts: SpawnOptions): SpawnResult {
+    const child = spawn("codex", ["--full-stdout", ...args], {
       cwd: opts.cwd,
       stdio: ["inherit", "pipe", "inherit"],
       env: { ...process.env, ...opts.env },
     });
+    return { child };
   },
 
   parseMessage: parseCodexMessage,

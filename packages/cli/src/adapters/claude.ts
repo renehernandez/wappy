@@ -1,6 +1,11 @@
 import { spawn } from "node:child_process";
 import { execaCommand } from "execa";
-import type { AgentAdapter, AgentMessage, SpawnOptions } from "./types";
+import type {
+  AgentAdapter,
+  AgentMessage,
+  SpawnOptions,
+  SpawnResult,
+} from "./types";
 
 function parseClaudeMessage(line: string): AgentMessage | null {
   let data: any;
@@ -65,19 +70,38 @@ function parseClaudeMessage(line: string): AgentMessage | null {
   return null;
 }
 
+function isPrintMode(args: string[]): boolean {
+  return args.some((a) => a === "--print" || a === "-p");
+}
+
 export const claudeAdapter: AgentAdapter = {
   name: "claude",
 
-  spawn(args: string[], opts: SpawnOptions) {
-    return spawn(
+  spawn(args: string[], opts: SpawnOptions): SpawnResult {
+    if (isPrintMode(args)) {
+      const child = spawn(
+        "claude",
+        ["--output-format", "stream-json", "--verbose", ...args],
+        {
+          cwd: opts.cwd,
+          stdio: ["inherit", "pipe", "inherit"],
+          env: { ...process.env, ...opts.env },
+        },
+      );
+      return { child };
+    }
+
+    const sessionId = crypto.randomUUID();
+    const child = spawn(
       "claude",
-      ["--output-format", "stream-json", "--verbose", ...args],
+      ["--verbose", "--session-id", sessionId, ...args],
       {
         cwd: opts.cwd,
-        stdio: ["inherit", "pipe", "inherit"],
+        stdio: "inherit",
         env: { ...process.env, ...opts.env },
       },
     );
+    return { child, sessionId };
   },
 
   parseMessage: parseClaudeMessage,
@@ -93,4 +117,4 @@ export const claudeAdapter: AgentAdapter = {
 };
 
 // Export for testing
-export { parseClaudeMessage };
+export { parseClaudeMessage, isPrintMode };
