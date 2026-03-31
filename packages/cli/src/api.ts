@@ -89,7 +89,7 @@ export function createApiClient(serverUrl: string, deviceToken?: string) {
       title?: string;
       agentType?: string;
       machineId?: string;
-    }): Promise<{ id: string }> {
+    }): Promise<{ id: string; version: number }> {
       return request("POST", "/api/sessions", data);
     },
 
@@ -102,7 +102,7 @@ export function createApiClient(serverUrl: string, deviceToken?: string) {
 
     async updateSession(
       sessionId: string,
-      data: { status?: string },
+      data: { status?: string; expectedVersion: number },
     ): Promise<void> {
       await request(
         "POST",

@@ -4,6 +4,7 @@ import type { ApiClient } from "../api";
 
 export class SessionSync {
   private sessionId: string | null = null;
+  private sessionVersion = 1;
   private started = false;
 
   constructor(
@@ -22,6 +23,7 @@ export class SessionSync {
           machineId: this.machineId,
         });
         this.sessionId = session.id;
+        this.sessionVersion = session.version;
         consola.debug(`Session created: ${this.sessionId}`);
       } catch (err) {
         consola.warn(
@@ -49,7 +51,10 @@ export class SessionSync {
     if (!this.sessionId) return;
 
     try {
-      await this.api.updateSession(this.sessionId, { status: "ended" });
+      await this.api.updateSession(this.sessionId, {
+        status: "ended",
+        expectedVersion: this.sessionVersion,
+      });
       consola.debug(`Session ended: ${this.sessionId}`);
     } catch (err) {
       consola.debug(
