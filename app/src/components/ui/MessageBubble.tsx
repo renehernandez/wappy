@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { MarkdownContent } from "./MarkdownContent";
 
+interface SubagentMessage {
+  id: string;
+  seq: number;
+  role: string;
+  content: string;
+  metadata?: string | null;
+}
+
 interface MessageBubbleProps {
   role: string;
   content: string;
   seq: number;
   metadata?: string | null;
+  subagentMessages?: SubagentMessage[];
 }
 
 function parseMetadata(
@@ -71,7 +80,103 @@ function ChevronIcon({ open }: { open: boolean }) {
   );
 }
 
-function ToolBubble({ content, seq }: { content: string; seq: number }) {
+function summarizeInput(input: unknown): string {
+  if (!input || typeof input !== "object") return "";
+  const obj = input as Record<string, unknown>;
+  // Show the first string-valued key as the brief summary
+  for (const key of [
+    "command",
+    "file_path",
+    "path",
+    "pattern",
+    "query",
+    "url",
+  ]) {
+    if (typeof obj[key] === "string") {
+      const val = obj[key] as string;
+      return val.length > 80 ? `${val.slice(0, 80)}...` : val;
+    }
+  }
+  // Fallback: first string value in the object
+  for (const val of Object.values(obj)) {
+    if (typeof val === "string") {
+      return val.length > 80 ? `${val.slice(0, 80)}...` : val;
+    }
+  }
+  return "";
+}
+
+function SubagentStep({ msg }: { msg: SubagentMessage }) {
+  let label = "";
+
+  if (msg.role === "tool") {
+    try {
+      const parsed = JSON.parse(msg.content);
+      if (parsed?.type === "tool_call") {
+        const summary = summarizeInput(parsed.input);
+        label = summary ? `${parsed.name}: ${summary}` : parsed.name;
+      } else if (parsed?.type === "tool_result") {
+        const output = String(parsed.output ?? "");
+        const brief = output.slice(0, 100);
+        label = `Result: ${brief}${output.length > 100 ? "..." : ""}`;
+      } else {
+        label = msg.content.slice(0, 100);
+      }
+    } catch {
+      label = msg.content.slice(0, 100);
+    }
+  } else {
+    // assistant text
+    const firstLine = msg.content.split("\n")[0] ?? "";
+    label =
+      firstLine.length > 100 ? `${firstLine.slice(0, 100)}...` : firstLine;
+  }
+
+  return (
+    <div className="px-3 py-1 text-xs font-mono text-gray-400 truncate border-b border-slate-700/30 last:border-0">
+      {label}
+    </div>
+  );
+}
+
+function SubagentGroup({ messages }: { messages: SubagentMessage[] }) {
+  const [open, setOpen] = useState(false);
+  const count = messages.length;
+
+  return (
+    <div className="mt-1 border border-slate-700/60 rounded-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-left bg-slate-800/40 hover:bg-slate-700/40 transition-colors"
+      >
+        <span className="text-xs font-mono text-gray-500 flex-1">
+          {count} {count === 1 ? "step" : "steps"}
+        </span>
+        <span className="text-gray-500 shrink-0">
+          <ChevronIcon open={open} />
+        </span>
+      </button>
+      {open && (
+        <div className="bg-slate-900/40">
+          {messages.map((msg) => (
+            <SubagentStep key={msg.id} msg={msg} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolBubble({
+  content,
+  seq,
+  subagentMessages,
+}: {
+  content: string;
+  seq: number;
+  subagentMessages?: SubagentMessage[];
+}) {
   const [open, setOpen] = useState(false);
 
   let toolName = "tool_use";
@@ -83,6 +188,12 @@ function ToolBubble({ content, seq }: { content: string; seq: number }) {
   } catch {
     // keep raw content
   }
+
+  const stepCount = subagentMessages?.length ?? 0;
+  const headerLabel =
+    stepCount > 0
+      ? `${toolName} (${stepCount} ${stepCount === 1 ? "step" : "steps"})`
+      : toolName;
 
   return (
     <div className="flex flex-col items-start">
@@ -97,7 +208,7 @@ function ToolBubble({ content, seq }: { content: string; seq: number }) {
             <WrenchIcon />
           </span>
           <span className="font-mono text-xs text-gray-400 flex-1">
-            {toolName}
+            {headerLabel}
           </span>
           <span className="text-gray-500">
             <ChevronIcon open={open} />
@@ -108,6 +219,11 @@ function ToolBubble({ content, seq }: { content: string; seq: number }) {
             <pre className="text-xs font-mono text-gray-300 p-3 overflow-x-auto whitespace-pre">
               {jsonContent}
             </pre>
+          </div>
+        )}
+        {subagentMessages && subagentMessages.length > 0 && (
+          <div className="border-t border-slate-700/50 px-3 pb-2 pt-1">
+            <SubagentGroup messages={subagentMessages} />
           </div>
         )}
       </div>
@@ -159,9 +275,16 @@ export function MessageBubble({
   content,
   seq,
   metadata,
+  subagentMessages,
 }: MessageBubbleProps) {
   if (role === "tool") {
-    return <ToolBubble content={content} seq={seq} />;
+    return (
+      <ToolBubble
+        content={content}
+        seq={seq}
+        subagentMessages={subagentMessages}
+      />
+    );
   }
 
   // Check for collapsible meta messages (skills, task notifications, commands)

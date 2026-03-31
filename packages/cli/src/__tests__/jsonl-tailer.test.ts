@@ -1,7 +1,11 @@
 import * as os from "node:os";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseClaudeJsonl, resolveSessionPath } from "../sync/jsonl-tailer";
+import {
+  parseClaudeJsonl,
+  parseProgressEvent,
+  resolveSessionPath,
+} from "../sync/jsonl-tailer";
 
 describe("resolveSessionPath", () => {
   it("encodes cwd slashes as dashes", () => {
@@ -154,7 +158,7 @@ describe("parseClaudeJsonl", () => {
     ).toBeNull();
   });
 
-  it("skips progress", () => {
+  it("skips progress event without data.message", () => {
     expect(parseClaudeJsonl(JSON.stringify({ type: "progress" }))).toBeNull();
   });
 
@@ -282,5 +286,147 @@ describe("parseClaudeJsonl", () => {
       content: "normal message",
     });
     expect(msg).not.toHaveProperty("metadata");
+  });
+});
+
+describe("parseProgressEvent", () => {
+  function makeProgressData(message: unknown) {
+    return { type: "progress", data: { message } };
+  }
+
+  it("parses assistant tool_use block as subagent tool_call", () => {
+    const data = makeProgressData({
+      type: "assistant",
+      message: {
+        content: [
+          { type: "tool_use", name: "Bash", input: { command: "git status" } },
+        ],
+      },
+    });
+    expect(parseProgressEvent(data)).toEqual({
+      type: "tool_call",
+      name: "Bash",
+      input: { command: "git status" },
+      metadata: { isSubagent: true },
+    });
+  });
+
+  it("parses assistant tool_use via parseClaudeJsonl", () => {
+    const line = JSON.stringify({
+      type: "progress",
+      data: {
+        message: {
+          type: "assistant",
+          message: {
+            content: [
+              {
+                type: "tool_use",
+                name: "Read",
+                input: { file_path: "/path/file.ts" },
+              },
+            ],
+          },
+        },
+      },
+    });
+    expect(parseClaudeJsonl(line)).toEqual({
+      type: "tool_call",
+      name: "Read",
+      input: { file_path: "/path/file.ts" },
+      metadata: { isSubagent: true },
+    });
+  });
+
+  it("parses user tool_result as subagent tool_result", () => {
+    const data = makeProgressData({
+      type: "user",
+      message: {
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: "abc",
+            content: [{ type: "text", text: "file contents" }],
+          },
+        ],
+      },
+    });
+    expect(parseProgressEvent(data)).toEqual({
+      type: "tool_result",
+      output: "file contents",
+      metadata: { isSubagent: true },
+    });
+  });
+
+  it("parses assistant text block as subagent text", () => {
+    const data = makeProgressData({
+      type: "assistant",
+      message: {
+        content: [{ type: "text", text: "I'll check the file." }],
+      },
+    });
+    expect(parseProgressEvent(data)).toEqual({
+      type: "text",
+      role: "assistant",
+      content: "I'll check the file.",
+      metadata: { isSubagent: true },
+    });
+  });
+
+  it("returns null for progress event without data.message", () => {
+    expect(parseProgressEvent({ type: "progress", data: {} })).toBeNull();
+    expect(parseProgressEvent({ type: "progress" })).toBeNull();
+  });
+
+  it("returns null for progress event with unknown message type", () => {
+    const data = makeProgressData({
+      type: "system",
+      message: { content: [{ type: "text", text: "hello" }] },
+    });
+    expect(parseProgressEvent(data)).toBeNull();
+  });
+
+  it("truncates tool_result content exceeding 500 characters", () => {
+    const longText = "x".repeat(600);
+    const data = makeProgressData({
+      type: "user",
+      message: {
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: "abc",
+            content: [{ type: "text", text: longText }],
+          },
+        ],
+      },
+    });
+    const result = parseProgressEvent(data);
+    expect(result).not.toBeNull();
+    expect(result?.type).toBe("tool_result");
+    if (result?.type === "tool_result") {
+      expect(typeof result.output).toBe("string");
+      const output = result.output as string;
+      expect(output.length).toBe(503); // 500 chars + "..."
+      expect(output.endsWith("...")).toBe(true);
+    }
+  });
+
+  it("handles tool_result with string content", () => {
+    const data = makeProgressData({
+      type: "user",
+      message: {
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: "abc",
+            content: "plain string output",
+          },
+        ],
+      },
+    });
+    expect(parseProgressEvent(data)).toEqual({
+      type: "tool_result",
+      output: "plain string output",
+      metadata: { isSubagent: true },
+    });
   });
 });

@@ -9,9 +9,75 @@ const POLL_TIMEOUT_MS = 30_000;
 const INTERNAL_TYPES = new Set([
   "file-history-snapshot",
   "queue-operation",
-  "progress",
   "last-prompt",
 ]);
+
+const TRUNCATE_LENGTH = 500;
+
+function truncate(text: string): string {
+  return text.length > TRUNCATE_LENGTH
+    ? `${text.slice(0, TRUNCATE_LENGTH)}...`
+    : text;
+}
+
+export function parseProgressEvent(data: any): AgentMessage | null {
+  const msg = data?.data?.message;
+  if (!msg) return null;
+
+  const msgType: string = msg.type;
+  const content = msg.message?.content;
+
+  if (!Array.isArray(content)) return null;
+
+  if (msgType === "assistant") {
+    const textBlocks = content.filter((b: any) => b.type === "text");
+    if (textBlocks.length > 0) {
+      return {
+        type: "text",
+        role: "assistant",
+        content: textBlocks.map((b: any) => b.text as string).join(""),
+        metadata: { isSubagent: true },
+      };
+    }
+
+    const toolBlock = content.find((b: any) => b.type === "tool_use");
+    if (toolBlock) {
+      return {
+        type: "tool_call",
+        name: toolBlock.name as string,
+        input: toolBlock.input ?? {},
+        metadata: { isSubagent: true },
+      };
+    }
+
+    return null;
+  }
+
+  if (msgType === "user") {
+    const resultBlock = content.find((b: any) => b.type === "tool_result");
+    if (resultBlock) {
+      let output = "";
+      if (typeof resultBlock.content === "string") {
+        output = truncate(resultBlock.content);
+      } else if (Array.isArray(resultBlock.content)) {
+        const joined = resultBlock.content
+          .filter((b: any) => b.type === "text")
+          .map((b: any) => b.text as string)
+          .join("");
+        output = truncate(joined);
+      }
+      return {
+        type: "tool_result",
+        output,
+        metadata: { isSubagent: true },
+      };
+    }
+
+    return null;
+  }
+
+  return null;
+}
 
 export function resolveSessionPath(cwd: string, sessionId: string): string {
   const normalizedCwd = cwd.replace(/\/$/, "");
@@ -39,6 +105,10 @@ export function parseClaudeJsonl(line: string): AgentMessage | null {
 
   if (INTERNAL_TYPES.has(data.type)) {
     return null;
+  }
+
+  if (data.type === "progress") {
+    return parseProgressEvent(data);
   }
 
   if (data.type === "user") {

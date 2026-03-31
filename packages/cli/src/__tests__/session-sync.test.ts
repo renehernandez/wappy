@@ -112,4 +112,50 @@ describe("SessionSync", () => {
 
     await expect(sync.end()).resolves.not.toThrow();
   });
+
+  it("forwards metadata from tool_call message", async () => {
+    await sync.handleMessage({
+      type: "tool_call",
+      name: "Bash",
+      input: { command: "git status" },
+      metadata: { isSubagent: true },
+    });
+
+    const addCall = api.addMessage.mock.calls[0];
+    expect(addCall[1].role).toBe("tool");
+    expect(addCall[1].metadata).toBe(JSON.stringify({ isSubagent: true }));
+  });
+
+  it("forwards metadata from tool_result message", async () => {
+    await sync.handleMessage({
+      type: "tool_result",
+      output: "some output",
+      metadata: { isSubagent: true },
+    });
+
+    const addCall = api.addMessage.mock.calls[0];
+    expect(addCall[1].role).toBe("tool");
+    expect(addCall[1].metadata).toBe(JSON.stringify({ isSubagent: true }));
+  });
+
+  it("omits metadata field when tool_call has no metadata", async () => {
+    await sync.handleMessage({
+      type: "tool_call",
+      name: "read_file",
+      input: { path: "/foo" },
+    });
+
+    const addCall = api.addMessage.mock.calls[0];
+    expect(addCall[1]).not.toHaveProperty("metadata");
+  });
+
+  it("omits metadata field when tool_result has no metadata", async () => {
+    await sync.handleMessage({
+      type: "tool_result",
+      output: "output",
+    });
+
+    const addCall = api.addMessage.mock.calls[0];
+    expect(addCall[1]).not.toHaveProperty("metadata");
+  });
 });

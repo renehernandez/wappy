@@ -7,8 +7,13 @@ export type AgentMessage =
       content: string;
       metadata?: Record<string, unknown>;
     }
-  | { type: "tool_call"; name: string; input: unknown }
-  | { type: "tool_result"; output: unknown }
+  | {
+      type: "tool_call";
+      name: string;
+      input: unknown;
+      metadata?: Record<string, unknown>;
+    }
+  | { type: "tool_result"; output: unknown; metadata?: Record<string, unknown> }
   | { type: "thinking"; content: string }
   | { type: "turn_complete" }
   | { type: "error"; message: string };

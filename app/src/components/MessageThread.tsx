@@ -14,6 +14,87 @@ interface MessageThreadProps {
   messages: Message[];
 }
 
+function parseMetadata(
+  metadata?: string | null,
+): Record<string, unknown> | null {
+  if (!metadata) return null;
+  try {
+    return JSON.parse(metadata);
+  } catch {
+    return null;
+  }
+}
+
+function isSubagentMessage(msg: Message): boolean {
+  const meta = parseMetadata(msg.metadata);
+  return meta?.isSubagent === true;
+}
+
+function isAgentToolCall(msg: Message): boolean {
+  if (msg.role !== "tool") return false;
+  try {
+    const parsed = JSON.parse(msg.content);
+    return parsed?.type === "tool_call";
+  } catch {
+    return false;
+  }
+}
+
+type RenderItem =
+  | { type: "regular"; message: Message }
+  | {
+      type: "agent-with-subagents";
+      agentMessage: Message;
+      subagentMessages: Message[];
+    };
+
+function groupMessages(messages: Message[]): RenderItem[] {
+  const items: RenderItem[] = [];
+  let i = 0;
+
+  while (i < messages.length) {
+    const msg = messages[i];
+
+    if (isSubagentMessage(msg)) {
+      // Collect consecutive subagent messages
+      const subagentMessages: Message[] = [];
+      while (i < messages.length && isSubagentMessage(messages[i])) {
+        subagentMessages.push(messages[i]);
+        i++;
+      }
+
+      // Find the preceding agent tool_call to attach them to
+      if (items.length > 0) {
+        const last = items[items.length - 1];
+        if (last.type === "regular" && isAgentToolCall(last.message)) {
+          items[items.length - 1] = {
+            type: "agent-with-subagents",
+            agentMessage: last.message,
+            subagentMessages,
+          };
+          continue;
+        }
+        if (last.type === "agent-with-subagents") {
+          // Append to existing group
+          last.subagentMessages.push(...subagentMessages);
+          continue;
+        }
+      }
+
+      // No preceding agent tool_call — render subagent messages individually
+      for (const subMsg of subagentMessages) {
+        items.push({ type: "regular", message: subMsg });
+      }
+      continue;
+    }
+
+    items.push({ type: "regular", message: msg });
+    i++;
+  }
+
+  return items;
+}
+
 export function MessageThread({ messages }: MessageThreadProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -60,21 +141,37 @@ export function MessageThread({ messages }: MessageThreadProps) {
     );
   }
 
+  const renderItems = groupMessages(messages);
+
   return (
     <div className="relative">
       <div
         ref={containerRef}
         className="space-y-4 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2"
       >
-        {messages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            role={msg.role}
-            content={msg.content}
-            seq={msg.seq}
-            metadata={msg.metadata}
-          />
-        ))}
+        {renderItems.map((item) => {
+          if (item.type === "agent-with-subagents") {
+            return (
+              <MessageBubble
+                key={item.agentMessage.id}
+                role={item.agentMessage.role}
+                content={item.agentMessage.content}
+                seq={item.agentMessage.seq}
+                metadata={item.agentMessage.metadata}
+                subagentMessages={item.subagentMessages}
+              />
+            );
+          }
+          return (
+            <MessageBubble
+              key={item.message.id}
+              role={item.message.role}
+              content={item.message.content}
+              seq={item.message.seq}
+              metadata={item.message.metadata}
+            />
+          );
+        })}
         <div ref={bottomRef} />
       </div>
 

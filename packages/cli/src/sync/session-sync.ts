@@ -83,11 +83,13 @@ export class SessionSync {
             name: msg.name,
             input: msg.input,
           }),
+          ...(msg.metadata ? { metadata: JSON.stringify(msg.metadata) } : {}),
         };
       case "tool_result":
         return {
           role: "tool",
           content: JSON.stringify({ type: "tool_result", output: msg.output }),
+          ...(msg.metadata ? { metadata: JSON.stringify(msg.metadata) } : {}),
         };
       case "error":
         return { role: "system", content: `Error: ${msg.message}` };
