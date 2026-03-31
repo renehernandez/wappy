@@ -58,6 +58,11 @@ export function parseClaudeJsonl(line: string): AgentMessage | null {
     const metadata: Record<string, unknown> = {};
     if (data.isMeta) metadata.isMeta = true;
     if (data.origin) metadata.origin = data.origin;
+    if (text.startsWith("<command-message>")) {
+      const match = text.match(/<command-name>\/?([^<]+)<\/command-name>/);
+      metadata.isCommand = true;
+      if (match) metadata.commandName = match[1];
+    }
 
     return {
       type: "text",

@@ -20,6 +20,10 @@ function parseMetadata(
 }
 
 function getMetaLabel(meta: Record<string, unknown>): string | null {
+  if (meta.isCommand) {
+    const name = meta.commandName as string | undefined;
+    return name ? `Command: /${name}` : "Command";
+  }
   if (meta.isMeta) {
     return "Skill prompt";
   }

@@ -218,6 +218,25 @@ describe("parseClaudeJsonl", () => {
     });
   });
 
+  it("extracts isCommand metadata from command-message user message", () => {
+    const msg = parseClaudeJsonl(
+      JSON.stringify({
+        type: "user",
+        message: {
+          content:
+            "<command-message>glab-review</command-message>\n<command-name>/glab-review</command-name>\n<command-args>current MR</command-args>",
+        },
+      }),
+    );
+    expect(msg).toEqual({
+      type: "text",
+      role: "user",
+      content:
+        "<command-message>glab-review</command-message>\n<command-name>/glab-review</command-name>\n<command-args>current MR</command-args>",
+      metadata: { isCommand: true, commandName: "glab-review" },
+    });
+  });
+
   it("does not include metadata when neither isMeta nor origin is present", () => {
     const msg = parseClaudeJsonl(
       JSON.stringify({
