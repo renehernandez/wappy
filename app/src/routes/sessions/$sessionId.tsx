@@ -82,7 +82,7 @@ function SessionDetailPage() {
 
   if (!data.found) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 py-12">
         <p className="font-mono text-gray-500 text-sm">
           &gt; Session not found.
         </p>
@@ -109,9 +109,9 @@ function SessionDetailPage() {
   const status = isValidStatus(session.status) ? session.status : "ended";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Sticky header */}
-      <div className="sticky top-14 z-40 -mx-4 px-4 py-3 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:mb-6 sm:py-0">
+      <div className="sticky top-0 sm:top-14 z-40 -mx-4 px-4 py-3 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 sm:static sm:bg-transparent sm:backdrop-blur-none sm:border-0 sm:mb-6 sm:py-0">
         <div className="flex items-center gap-3">
           <Link
             to="/sessions"
