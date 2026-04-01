@@ -43,7 +43,7 @@ export async function createSession(
   };
 
   await db.insert(sessions).values(session);
-  notifyUserRoom(accountId, {
+  await notifyUserRoom(accountId, {
     type: "session_created",
     sessionId: id,
     title: data.title ?? null,
@@ -141,7 +141,7 @@ export async function updateSession(
     throw new VersionConflictError();
   }
 
-  notifyUserRoom(accountId, {
+  await notifyUserRoom(accountId, {
     type: "session_updated",
     sessionId,
     status: data.status,
@@ -162,7 +162,7 @@ export async function deleteSession(
     .set({ status: "archived", seq, updatedAt: now })
     .where(and(eq(sessions.id, sessionId), eq(sessions.accountId, accountId)));
 
-  notifyUserRoom(accountId, {
+  await notifyUserRoom(accountId, {
     type: "session_updated",
     sessionId,
     status: "archived",

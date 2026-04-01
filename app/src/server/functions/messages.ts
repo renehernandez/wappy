@@ -70,21 +70,23 @@ export async function addMessage(
     .set({ updatedAt: now })
     .where(eq(sessions.id, data.sessionId));
 
-  // Notify DOs via ctx.waitUntil — non-blocking, Worker stays alive
-  notifyUserRoom(accountId, {
-    type: "message_added",
-    sessionId: data.sessionId,
-    messageSeq: seq,
-  });
-  notifySessionRoom(data.sessionId, {
-    type: "message",
-    id: message.id,
-    seq: message.seq,
-    role: message.role,
-    content: message.content,
-    metadata: message.metadata,
-    createdAt: message.createdAt,
-  });
+  // Notify DOs in parallel — awaited to ensure delivery before Worker exits
+  await Promise.all([
+    notifyUserRoom(accountId, {
+      type: "message_added",
+      sessionId: data.sessionId,
+      messageSeq: seq,
+    }),
+    notifySessionRoom(data.sessionId, {
+      type: "message",
+      id: message.id,
+      seq: message.seq,
+      role: message.role,
+      content: message.content,
+      metadata: message.metadata,
+      createdAt: message.createdAt,
+    }),
+  ]);
 
   return message;
 }
