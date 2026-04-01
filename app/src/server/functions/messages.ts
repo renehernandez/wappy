@@ -1,3 +1,4 @@
+import { waitUntil } from "cloudflare:workers";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { sessionMessages, sessions } from "../../../db/schema";
@@ -70,20 +71,25 @@ export async function addMessage(
     .set({ updatedAt: now })
     .where(eq(sessions.id, data.sessionId));
 
-  // Notify DOs (best-effort, never fails the function)
-  notifyUserRoom(accountId, {
-    type: "message_added",
-    sessionId: data.sessionId,
-    messageSeq: seq,
-  });
-  notifySessionRoom(data.sessionId, {
-    type: "message",
-    id: message.id,
-    seq: message.seq,
-    role: message.role,
-    content: message.content,
-    createdAt: message.createdAt,
-  });
+  // Notify DOs (best-effort via waitUntil — keeps Worker alive without blocking response)
+  waitUntil(
+    notifyUserRoom(accountId, {
+      type: "message_added",
+      sessionId: data.sessionId,
+      messageSeq: seq,
+    }),
+  );
+  waitUntil(
+    notifySessionRoom(data.sessionId, {
+      type: "message",
+      id: message.id,
+      seq: message.seq,
+      role: message.role,
+      content: message.content,
+      metadata: message.metadata,
+      createdAt: message.createdAt,
+    }),
+  );
 
   return message;
 }

@@ -58,6 +58,7 @@ function SessionDetailPage() {
       seq: number;
       role: string;
       content: string;
+      metadata?: string | null;
       createdAt: string;
     }>
   >([]);
@@ -68,6 +69,7 @@ function SessionDetailPage() {
       seq: number;
       role: string;
       content: string;
+      metadata?: string | null;
       createdAt: string;
     }) => {
       setLiveMessages((prev) => {

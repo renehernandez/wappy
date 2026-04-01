@@ -7,6 +7,7 @@ export type SessionRoomMessage = {
   seq: number;
   role: string;
   content: string;
+  metadata?: string | null;
   createdAt: string;
 };
 
