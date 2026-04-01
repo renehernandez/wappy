@@ -7,7 +7,7 @@ function createMockApi() {
     pollDeviceCode: vi.fn(),
     listDevices: vi.fn(),
     revokeDevice: vi.fn(),
-    createSession: vi.fn().mockResolvedValue({ id: "s-mock-123" }),
+    createSession: vi.fn().mockResolvedValue({ id: "s-mock-123", version: 1 }),
     addMessage: vi.fn().mockResolvedValue(undefined),
     updateSession: vi.fn().mockResolvedValue(undefined),
   };
@@ -84,6 +84,7 @@ describe("SessionSync", () => {
 
     expect(api.updateSession).toHaveBeenCalledWith("s-mock-123", {
       status: "ended",
+      expectedVersion: 1,
     });
   });
 

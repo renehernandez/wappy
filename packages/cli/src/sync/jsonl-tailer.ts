@@ -30,22 +30,23 @@ export function parseProgressEvent(data: any): AgentMessage | null {
   if (!Array.isArray(content)) return null;
 
   if (msgType === "assistant") {
-    const textBlocks = content.filter((b: any) => b.type === "text");
-    if (textBlocks.length > 0) {
-      return {
-        type: "text",
-        role: "assistant",
-        content: textBlocks.map((b: any) => b.text as string).join(""),
-        metadata: { isSubagent: true },
-      };
-    }
-
+    // Check tool_use first (primary signal for subagent activity)
     const toolBlock = content.find((b: any) => b.type === "tool_use");
     if (toolBlock) {
       return {
         type: "tool_call",
         name: toolBlock.name as string,
         input: toolBlock.input ?? {},
+        metadata: { isSubagent: true },
+      };
+    }
+
+    const textBlocks = content.filter((b: any) => b.type === "text");
+    if (textBlocks.length > 0) {
+      return {
+        type: "text",
+        role: "assistant",
+        content: textBlocks.map((b: any) => b.text as string).join(""),
         metadata: { isSubagent: true },
       };
     }

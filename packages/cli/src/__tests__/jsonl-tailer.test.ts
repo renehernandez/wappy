@@ -410,6 +410,24 @@ describe("parseProgressEvent", () => {
     }
   });
 
+  it("prioritizes tool_use over text when both present in assistant message", () => {
+    const data = makeProgressData({
+      type: "assistant",
+      message: {
+        content: [
+          { type: "text", text: "I'll check the file." },
+          { type: "tool_use", name: "Read", input: { file_path: "/foo.ts" } },
+        ],
+      },
+    });
+    expect(parseProgressEvent(data)).toEqual({
+      type: "tool_call",
+      name: "Read",
+      input: { file_path: "/foo.ts" },
+      metadata: { isSubagent: true },
+    });
+  });
+
   it("handles tool_result with string content", () => {
     const data = makeProgressData({
       type: "user",

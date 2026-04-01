@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MessageBubble } from "~/components/ui/MessageBubble";
+import { parseMetadata } from "~/lib/metadata";
 
 interface Message {
   id: string;
@@ -12,17 +13,6 @@ interface Message {
 
 interface MessageThreadProps {
   messages: Message[];
-}
-
-function parseMetadata(
-  metadata?: string | null,
-): Record<string, unknown> | null {
-  if (!metadata) return null;
-  try {
-    return JSON.parse(metadata);
-  } catch {
-    return null;
-  }
 }
 
 function isSubagentMessage(msg: Message): boolean {
@@ -53,9 +43,7 @@ function groupMessages(messages: Message[]): RenderItem[] {
   let i = 0;
 
   while (i < messages.length) {
-    const msg = messages[i];
-
-    if (isSubagentMessage(msg)) {
+    if (isSubagentMessage(messages[i])) {
       // Collect consecutive subagent messages
       const subagentMessages: Message[] = [];
       while (i < messages.length && isSubagentMessage(messages[i])) {
@@ -88,7 +76,7 @@ function groupMessages(messages: Message[]): RenderItem[] {
       continue;
     }
 
-    items.push({ type: "regular", message: msg });
+    items.push({ type: "regular", message: messages[i] });
     i++;
   }
 

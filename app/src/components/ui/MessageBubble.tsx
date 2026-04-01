@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { parseMetadata } from "~/lib/metadata";
 import { MarkdownContent } from "./MarkdownContent";
 
 interface SubagentMessage {
@@ -15,17 +16,6 @@ interface MessageBubbleProps {
   seq: number;
   metadata?: string | null;
   subagentMessages?: SubagentMessage[];
-}
-
-function parseMetadata(
-  metadata?: string | null,
-): Record<string, unknown> | null {
-  if (!metadata) return null;
-  try {
-    return JSON.parse(metadata);
-  } catch {
-    return null;
-  }
 }
 
 function getMetaLabel(meta: Record<string, unknown>): string | null {
