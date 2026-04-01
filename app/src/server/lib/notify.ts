@@ -1,49 +1,33 @@
 import { env } from "cloudflare:workers";
-import { getRequestContext } from "./request-context";
 
-export function notifyUserRoom(
+export async function notifyUserRoom(
   accountId: string,
   payload: Record<string, unknown>,
-): Promise<void> | undefined {
-  const promise = (async () => {
+) {
+  try {
     const id = env.UserRoom.idFromName(accountId);
     const stub = env.UserRoom.get(id);
     await stub.fetch("https://dummy/notify", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-  })().catch((err) =>
-    console.error("[notify] UserRoom notification failed:", err),
-  );
-
-  const ctx = getRequestContext();
-  if (ctx) {
-    ctx.waitUntil(promise);
-    return undefined;
+  } catch (err) {
+    console.error("[notify] UserRoom notification failed:", err);
   }
-  // No context — return the promise so callers can await it
-  return promise;
 }
 
-export function notifySessionRoom(
+export async function notifySessionRoom(
   sessionId: string,
   payload: Record<string, unknown>,
-): Promise<void> | undefined {
-  const promise = (async () => {
+) {
+  try {
     const id = env.SessionRoom.idFromName(sessionId);
     const stub = env.SessionRoom.get(id);
     await stub.fetch("https://dummy/notify", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-  })().catch((err) =>
-    console.error("[notify] SessionRoom notification failed:", err),
-  );
-
-  const ctx = getRequestContext();
-  if (ctx) {
-    ctx.waitUntil(promise);
-    return undefined;
+  } catch (err) {
+    console.error("[notify] SessionRoom notification failed:", err);
   }
-  return promise;
 }
