@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock cloudflare:workers env
+// Mock cloudflare:workers env + waitUntil
 const mockFetch = vi.fn().mockResolvedValue(new Response("ok"));
 const mockGet = vi.fn().mockReturnValue({ fetch: mockFetch });
 const mockIdFromName = vi.fn().mockReturnValue("mock-id");
+const mockWaitUntil = vi.fn();
 
 vi.mock("cloudflare:workers", () => ({
   env: {
@@ -16,6 +17,7 @@ vi.mock("cloudflare:workers", () => ({
       get: mockGet,
     },
   },
+  waitUntil: mockWaitUntil,
 }));
 
 const { notifyUserRoom, notifySessionRoom } = await import("../notify");
@@ -27,11 +29,17 @@ beforeEach(() => {
 
 describe("notifyUserRoom", () => {
   it("sends POST to UserRoom DO with JSON payload", async () => {
-    await notifyUserRoom("acc-123", {
+    notifyUserRoom("acc-123", {
       type: "session_created",
       sessionId: "s-1",
       title: "Test",
     });
+
+    // waitUntil is called with the background promise
+    expect(mockWaitUntil).toHaveBeenCalledTimes(1);
+
+    // Wait for the background promise to complete
+    await mockWaitUntil.mock.calls[0][0];
 
     expect(mockIdFromName).toHaveBeenCalledWith("acc-123");
     expect(mockGet).toHaveBeenCalledWith("mock-id");
@@ -51,25 +59,26 @@ describe("notifyUserRoom", () => {
   it("does not throw on fetch failure", async () => {
     mockFetch.mockRejectedValue(new Error("DO unavailable"));
 
-    await expect(
-      notifyUserRoom("acc-123", { type: "session_created" }),
-    ).resolves.not.toThrow();
+    notifyUserRoom("acc-123", { type: "session_created" });
+
+    expect(mockWaitUntil).toHaveBeenCalledTimes(1);
+    // The promise should resolve (error is caught internally)
+    await expect(mockWaitUntil.mock.calls[0][0]).resolves.not.toThrow();
   });
 
-  it("does not throw on idFromName failure", async () => {
+  it("does not throw on idFromName failure", () => {
     mockIdFromName.mockImplementationOnce(() => {
       throw new Error("bad id");
     });
 
-    await expect(
-      notifyUserRoom("acc-123", { type: "test" }),
-    ).resolves.not.toThrow();
+    // Should not throw synchronously — error caught in try/catch
+    expect(() => notifyUserRoom("acc-123", { type: "test" })).not.toThrow();
   });
 });
 
 describe("notifySessionRoom", () => {
   it("sends POST to SessionRoom DO with full message", async () => {
-    await notifySessionRoom("s-456", {
+    notifySessionRoom("s-456", {
       type: "message",
       id: "m-1",
       seq: 5,
@@ -77,6 +86,9 @@ describe("notifySessionRoom", () => {
       content: "Hello",
       createdAt: "2026-01-01T00:00:00Z",
     });
+
+    expect(mockWaitUntil).toHaveBeenCalledTimes(1);
+    await mockWaitUntil.mock.calls[0][0];
 
     expect(mockIdFromName).toHaveBeenCalledWith("s-456");
     expect(mockFetch).toHaveBeenCalledWith(
@@ -95,8 +107,9 @@ describe("notifySessionRoom", () => {
   it("does not throw on failure", async () => {
     mockFetch.mockRejectedValue(new Error("network error"));
 
-    await expect(
-      notifySessionRoom("s-456", { type: "message" }),
-    ).resolves.not.toThrow();
+    notifySessionRoom("s-456", { type: "message" });
+
+    expect(mockWaitUntil).toHaveBeenCalledTimes(1);
+    await expect(mockWaitUntil.mock.calls[0][0]).resolves.not.toThrow();
   });
 });
