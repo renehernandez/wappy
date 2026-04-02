@@ -21,10 +21,13 @@ type SessionRoomEvent = SessionRoomMessage | SessionRoomBatch;
 export function useSessionRoom(
   sessionId: string | null,
   onMessage: (message: SessionRoomMessage) => void,
+  onConnect?: () => void,
 ) {
   const socketRef = useRef<PartySocket | null>(null);
   const callbackRef = useRef(onMessage);
   callbackRef.current = onMessage;
+  const onConnectRef = useRef(onConnect);
+  onConnectRef.current = onConnect;
 
   useEffect(() => {
     if (!sessionId) return;
@@ -37,6 +40,7 @@ export function useSessionRoom(
 
     socket.onopen = () => {
       console.log("[SessionRoom] WebSocket connected", sessionId);
+      onConnectRef.current?.();
     };
 
     socket.onclose = (event) => {

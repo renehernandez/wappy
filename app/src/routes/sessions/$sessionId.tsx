@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useSessionRoom } from "~/client/ws/useSessionRoom";
 import { MessageThread } from "~/components/MessageThread";
 import { Badge } from "~/components/ui/Badge";
@@ -90,7 +90,39 @@ function SessionDetailPage() {
     [],
   );
 
-  useSessionRoom(data.found ? params.sessionId : null, handleWsMessage);
+  // Track loaderMaxSeq for gap-fill on reconnect
+  const loaderMaxSeqRef = useRef(0);
+  if (data.found) {
+    const msgs = data.messages;
+    loaderMaxSeqRef.current =
+      msgs.length > 0 ? Math.max(...msgs.map((m) => m.seq)) : 0;
+  }
+
+  const handleWsConnect = useCallback(() => {
+    if (!data.found) return;
+    const afterSeq = loaderMaxSeqRef.current;
+    // Fetch any messages that arrived between loader and WS connect
+    listMessagesFn({
+      data: { sessionId: params.sessionId, afterSeq },
+    }).then((gapMessages) => {
+      for (const msg of gapMessages) {
+        handleWsMessage({
+          id: msg.id,
+          seq: msg.seq,
+          role: msg.role,
+          content: msg.content,
+          metadata: msg.metadata,
+          createdAt: msg.createdAt,
+        });
+      }
+    });
+  }, [data.found, params.sessionId, handleWsMessage]);
+
+  useSessionRoom(
+    data.found ? params.sessionId : null,
+    handleWsMessage,
+    handleWsConnect,
+  );
 
   if (!data.found) {
     return (
