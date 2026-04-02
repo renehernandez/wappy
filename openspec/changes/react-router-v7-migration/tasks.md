@@ -9,25 +9,25 @@
 
 ## 2. Server Entry
 
-- [ ] 2.1 Rewrite `app/src/server.ts`: use `createRequestHandler` from `react-router`, pass `{ cloudflare: { env, ctx } }` as load context
-- [ ] 2.2 Keep `routePartykitRequest` before the React Router handler
-- [ ] 2.3 Keep DO class exports (`UserRoom`, `SessionRoom`)
+- [x] 2.1 Rewrite `app/src/server.ts`: use `createRequestHandler` from `react-router`, pass `{ cloudflare: { env, ctx } }` as load context
+- [x] 2.2 Keep `routePartykitRequest` before the React Router handler
+- [x] 2.3 Keep DO class exports (`UserRoom`, `SessionRoom`)
 - [ ] 2.4 Verify `pnpm build` produces a deployable Worker bundle
 
 ## 3. Root Layout
 
-- [ ] 3.1 Create `app/routes/root.tsx` (or `_layout.tsx` per RR7 convention) with `<Outlet />`, `<Scripts />`, `<ScrollRestoration />`
-- [ ] 3.2 Move auth check from TanStack `beforeLoad` to a root route `loader` using `AppLoadContext`
-- [ ] 3.3 Move `UserRoomListener` component and wire it to the loader's session data
-- [ ] 3.4 Move `NavShell` rendering and user email display
+- [x] 3.1 Create `app/routes/root.tsx` (or `_layout.tsx` per RR7 convention) with `<Outlet />`, `<Scripts />`, `<ScrollRestoration />`
+- [x] 3.2 Move auth check from TanStack `beforeLoad` to a root route `loader` using `AppLoadContext`
+- [x] 3.3 Move `UserRoomListener` component and wire it to the loader's session data
+- [x] 3.4 Move `NavShell` rendering and user email display
 
 ## 4. Page Routes
 
-- [ ] 4.1 Migrate `/` (index) route: convert `createFileRoute` to RR7 file route with `loader`
-- [ ] 4.2 Migrate `/sessions` list route: convert loader from `createServerFn` to RR7 `loader` with `AppLoadContext`
-- [ ] 4.3 Migrate `/sessions/$sessionId` detail route: convert loader, keep `useSessionRoom` hook and `liveMessages` state
-- [ ] 4.4 Migrate `/auth/device` route
-- [ ] 4.5 Replace all `Route.useLoaderData()` with `useLoaderData()` from `react-router`
+- [x] 4.1 Migrate `/` (index) route: convert `createFileRoute` to RR7 file route with `loader`
+- [x] 4.2 Migrate `/sessions` list route: convert loader from `createServerFn` to RR7 `loader` with `AppLoadContext`
+- [x] 4.3 Migrate `/sessions/$sessionId` detail route: convert loader, keep `useSessionRoom` hook and `liveMessages` state
+- [x] 4.4 Migrate `/auth/device` route
+- [x] 4.5 Replace all `Route.useLoaderData()` with `useLoaderData()` from `react-router`
 
 ## 5. API Resource Routes
 
