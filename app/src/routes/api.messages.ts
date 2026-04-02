@@ -32,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return Response.json(messages);
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);
@@ -73,6 +73,7 @@ export async function action({ request }: Route.ActionArgs) {
       },
       db,
       r2,
+      context.cloudflare.ctx,
     );
     return Response.json(message, { status: 201 });
   } catch (err) {

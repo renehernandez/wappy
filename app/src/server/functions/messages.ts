@@ -25,6 +25,7 @@ export async function addMessage(
   },
   db: Db,
   r2: R2 = getR2(),
+  ctx?: ExecutionContext,
 ) {
   // Verify session belongs to account
   const session = await db
@@ -70,8 +71,8 @@ export async function addMessage(
     .set({ updatedAt: now })
     .where(eq(sessions.id, data.sessionId));
 
-  // Notify DOs in parallel — awaited to ensure delivery before Worker exits
-  await Promise.all([
+  // Notify DOs — non-blocking via ctx.waitUntil when available
+  const notifyPromise = Promise.all([
     notifyUserRoom(accountId, {
       type: "message_added",
       sessionId: data.sessionId,
@@ -86,7 +87,13 @@ export async function addMessage(
       metadata: message.metadata,
       createdAt: message.createdAt,
     }),
-  ]);
+  ]).catch((err) => console.error("[notify] addMessage failed:", err));
+
+  if (ctx) {
+    ctx.waitUntil(notifyPromise);
+  } else {
+    await notifyPromise;
+  }
 
   return message;
 }
@@ -103,6 +110,7 @@ export async function addMessages(
   },
   db: Db,
   r2: R2 = getR2(),
+  ctx?: ExecutionContext,
 ) {
   // Verify session belongs to account (once for the batch)
   const session = await db
@@ -151,9 +159,9 @@ export async function addMessages(
     .set({ updatedAt: now })
     .where(eq(sessions.id, data.sessionId));
 
-  // Notify DOs once for the batch — send the last message for SessionRoom
+  // Notify DOs once for the batch — non-blocking via ctx.waitUntil when available
   const lastMsg = stored[stored.length - 1];
-  await Promise.all([
+  const notifyPromise = Promise.all([
     notifyUserRoom(accountId, {
       type: "message_added",
       sessionId: data.sessionId,
@@ -170,7 +178,13 @@ export async function addMessages(
         createdAt: m.createdAt,
       })),
     }),
-  ]);
+  ]).catch((err) => console.error("[notify] addMessages failed:", err));
+
+  if (ctx) {
+    ctx.waitUntil(notifyPromise);
+  } else {
+    await notifyPromise;
+  }
 
   return stored;
 }

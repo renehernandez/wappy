@@ -23,6 +23,7 @@ export async function createSession(
     metadata?: string;
   },
   db: Db,
+  ctx?: ExecutionContext,
 ) {
   const id = nanoid();
   const now = new Date().toISOString();
@@ -43,11 +44,18 @@ export async function createSession(
   };
 
   await db.insert(sessions).values(session);
-  await notifyUserRoom(accountId, {
+
+  const notifyPromise = notifyUserRoom(accountId, {
     type: "session_created",
     sessionId: id,
     title: data.title ?? null,
-  });
+  }).catch((err) => console.error("[notify] createSession failed:", err));
+
+  if (ctx) {
+    ctx.waitUntil(notifyPromise);
+  } else {
+    await notifyPromise;
+  }
   return session;
 }
 
@@ -109,6 +117,7 @@ export async function updateSession(
     expectedVersion: number;
   },
   db: Db,
+  ctx?: ExecutionContext,
 ) {
   const now = new Date().toISOString();
   const seq = await incrementSeq(accountId, db);
@@ -141,11 +150,17 @@ export async function updateSession(
     throw new VersionConflictError();
   }
 
-  await notifyUserRoom(accountId, {
+  const notifyPromise = notifyUserRoom(accountId, {
     type: "session_updated",
     sessionId,
     status: data.status,
-  });
+  }).catch((err) => console.error("[notify] updateSession failed:", err));
+
+  if (ctx) {
+    ctx.waitUntil(notifyPromise);
+  } else {
+    await notifyPromise;
+  }
   return getSession(sessionId, accountId, db);
 }
 
@@ -153,6 +168,7 @@ export async function deleteSession(
   sessionId: string,
   accountId: string,
   db: Db,
+  ctx?: ExecutionContext,
 ) {
   const seq = await incrementSeq(accountId, db);
   const now = new Date().toISOString();
@@ -162,9 +178,15 @@ export async function deleteSession(
     .set({ status: "archived", seq, updatedAt: now })
     .where(and(eq(sessions.id, sessionId), eq(sessions.accountId, accountId)));
 
-  await notifyUserRoom(accountId, {
+  const notifyPromise = notifyUserRoom(accountId, {
     type: "session_updated",
     sessionId,
     status: "archived",
-  });
+  }).catch((err) => console.error("[notify] deleteSession failed:", err));
+
+  if (ctx) {
+    ctx.waitUntil(notifyPromise);
+  } else {
+    await notifyPromise;
+  }
 }

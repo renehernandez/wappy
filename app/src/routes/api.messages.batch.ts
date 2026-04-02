@@ -4,7 +4,7 @@ import { addMessages } from "~/server/functions/messages";
 import { getDb } from "~/server/lib/db";
 import { getR2 } from "~/server/lib/r2";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);
@@ -68,6 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
       { sessionId: body.sessionId as string, messages },
       db,
       r2,
+      context.cloudflare.ctx,
     );
     return Response.json(stored, { status: 201 });
   } catch (err) {

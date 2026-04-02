@@ -3,7 +3,7 @@ import { authenticateRequest } from "~/server/auth/api-auth";
 import { updateSession } from "~/server/functions/sessions";
 import { getDb } from "~/server/lib/db";
 
-export async function action({ request, params }: Route.ActionArgs) {
+export async function action({ request, params, context }: Route.ActionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {
@@ -36,6 +36,7 @@ export async function action({ request, params }: Route.ActionArgs) {
         expectedVersion: body.expectedVersion as number,
       },
       db,
+      context.cloudflare.ctx,
     );
     return Response.json(session);
   } catch (err) {

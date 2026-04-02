@@ -25,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return Response.json(sessions);
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {
@@ -50,6 +50,7 @@ export async function action({ request }: Route.ActionArgs) {
       metadata: typeof body.metadata === "string" ? body.metadata : undefined,
     },
     db,
+    context.cloudflare.ctx,
   );
   return Response.json(session, { status: 201 });
 }

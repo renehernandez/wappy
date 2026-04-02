@@ -37,13 +37,13 @@
 - [x] 5.4 Migrate `POST /api/messages/batch` → `api.messages.batch.ts` resource route
 - [x] 5.5 Migrate device routes: `/api/devices`, `/api/devices/code`, `/api/devices/poll`, `/api/devices/revoke`
 - [x] 5.6 Migrate `/api/connect` and `/api/sync` resource routes
-- [ ] 5.7 All resource route actions/loaders SHALL extract `ctx` from `AppLoadContext` and pass to notify functions
+- [x] 5.7 All resource route actions/loaders SHALL extract `ctx` from `AppLoadContext` and pass to notify functions
 
 ## 6. DO Notifications
 
-- [ ] 6.1 Update `notifyUserRoom` and `notifySessionRoom` to return `Promise<void>` (no longer need to be awaited by callers)
-- [ ] 6.2 Update all call sites in `addMessage`, `addMessages`, `createSession`, `updateSession`, `deleteSession` to use `ctx.waitUntil(notifyUserRoom(...))` instead of `await notifyUserRoom(...)`
-- [ ] 6.3 Remove `await Promise.all([notify...])` pattern — each notify is independently `waitUntil`'d
+- [x] 6.1 Update `notifyUserRoom` and `notifySessionRoom` to return `Promise<void>` (no longer need to be awaited by callers)
+- [x] 6.2 Update all call sites in `addMessage`, `addMessages`, `createSession`, `updateSession`, `deleteSession` to use `ctx.waitUntil(notifyUserRoom(...))` instead of `await notifyUserRoom(...)`
+- [x] 6.3 Remove `await Promise.all([notify...])` pattern — each notify is independently `waitUntil`'d
 
 ## 7. Server Functions Removal
 
