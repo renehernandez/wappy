@@ -47,10 +47,10 @@
 
 ## 7. Server Functions Removal
 
-- [ ] 7.1 Remove `app/src/server/functions/session-actions.ts` (server functions → inline in loaders)
-- [ ] 7.2 Remove `app/src/server/functions/message-actions.ts` (server functions → inline in loaders)
-- [ ] 7.3 Remove `app/src/server/functions/session.ts` (auth server function → loader in root layout)
-- [ ] 7.4 Keep `app/src/server/functions/messages.ts` and `sessions.ts` as pure business logic (no framework deps)
+- [x] 7.1 Remove `app/src/server/functions/session-actions.ts` (server functions → inline in loaders)
+- [x] 7.2 Remove `app/src/server/functions/message-actions.ts` (server functions → inline in loaders)
+- [x] 7.3 Remove `app/src/server/functions/session.ts` (auth server function → loader in root layout)
+- [x] 7.4 Keep `app/src/server/functions/messages.ts` and `sessions.ts` as pure business logic (no framework deps)
 
 ## 8. Tests
 

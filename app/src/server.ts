@@ -1,12 +1,21 @@
 import { env } from "cloudflare:workers";
-import handler from "@tanstack/react-start/server-entry";
+import { createRequestHandler } from "react-router";
 import { routePartykitRequest } from "partyserver";
 
 export { UserRoom } from "./parties/user";
 export { SessionRoom } from "./parties/session";
 
+const requestHandler = createRequestHandler(
+  () => import("virtual:react-router/server-build"),
+  import.meta.env.MODE,
+);
+
 export default {
-  async fetch(request: Request) {
+  async fetch(
+    request: Request,
+    _env: unknown,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
     // WebSocket upgrades → Durable Objects
     const partyResponse = await routePartykitRequest(
       request,
@@ -14,7 +23,9 @@ export default {
     );
     if (partyResponse) return partyResponse;
 
-    // Everything else → TanStack Start (SSR + server functions)
-    return handler.fetch(request);
+    // Everything else → React Router (SSR + loaders + actions)
+    return requestHandler(request, {
+      cloudflare: { env, ctx },
+    });
   },
-};
+} satisfies ExportedHandler;
