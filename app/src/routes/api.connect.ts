@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { eq } from "drizzle-orm";
+import type { LoaderFunctionArgs } from "react-router";
 import { extractCfAccessIdentity } from "~/server/auth/cf-access";
 import { extractDeviceIdentity } from "~/server/auth/device-token";
 import { upsertAccount } from "~/server/functions/auth";

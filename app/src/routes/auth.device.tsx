@@ -1,6 +1,5 @@
-import { useLoaderData, useRouteLoaderData, useFetcher, useSearchParams } from "react-router";
-import { useState } from "react";
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import { useFetcher, useLoaderData, useRouteLoaderData } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { DeviceApproval } from "~/components/DeviceApproval";
 import { requireAuth } from "~/server/auth/require-auth";
 import {
@@ -51,9 +50,11 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
 
 export default function DeviceAuthPage() {
   const data = useLoaderData<typeof loader>();
-  const rootData = useRouteLoaderData("root") as {
-    session: { accountId: string; email: string } | null;
-  } | undefined;
+  const rootData = useRouteLoaderData("root") as
+    | {
+        session: { accountId: string; email: string } | null;
+      }
+    | undefined;
   const session = rootData?.session;
   const fetcher = useFetcher<typeof action>();
 

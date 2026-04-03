@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { updateSession } from "~/server/functions/sessions";
 import { getDb } from "~/server/lib/db";
@@ -31,8 +31,7 @@ export async function action({ request, params, context }: ActionFunctionArgs) {
       {
         title: typeof body.title === "string" ? body.title : undefined,
         status: typeof body.status === "string" ? body.status : undefined,
-        metadata:
-          typeof body.metadata === "string" ? body.metadata : undefined,
+        metadata: typeof body.metadata === "string" ? body.metadata : undefined,
         expectedVersion: body.expectedVersion as number,
       },
       db,

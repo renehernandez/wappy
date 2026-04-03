@@ -12,7 +12,7 @@
 - [x] 2.1 Rewrite `app/src/server.ts`: use `createRequestHandler` from `react-router`, pass `{ cloudflare: { env, ctx } }` as load context
 - [x] 2.2 Keep `routePartykitRequest` before the React Router handler
 - [x] 2.3 Keep DO class exports (`UserRoom`, `SessionRoom`)
-- [ ] 2.4 Verify `pnpm build` produces a deployable Worker bundle
+- [x] 2.4 Verify `pnpm build` produces a deployable Worker bundle
 
 ## 3. Root Layout
 
@@ -54,15 +54,15 @@
 
 ## 8. Tests
 
-- [ ] 8.1 Update `app/src/server/lib/__tests__/notify.test.ts` — tests stay mostly the same, notify is still async
-- [ ] 8.2 Update any tests importing from `@tanstack/react-start` or `@tanstack/react-router`
-- [ ] 8.3 Run `pnpm test` and fix all failures
+- [x] 8.1 Update `app/src/server/lib/__tests__/notify.test.ts` — tests stay mostly the same, notify is still async
+- [x] 8.2 Update any tests importing from `@tanstack/react-start` or `@tanstack/react-router`
+- [x] 8.3 Run `pnpm test` and fix all failures
 - [x] 8.4 Run `pnpm typecheck` and fix all type errors
-- [ ] 8.5 Run `pnpm lint` and fix all lint issues
+- [x] 8.5 Run `pnpm lint` and fix all lint issues
 
 ## 9. Validation
 
-- [ ] 9.1 Run `pnpm build` and verify the Worker bundle builds
+- [x] 9.1 Run `pnpm build` and verify the Worker bundle builds
 - [ ] 9.2 Deploy to Cloudflare and verify session list loads
 - [ ] 9.3 Start a `wappy run claude` session and verify messages appear in real-time on the session detail page
 - [ ] 9.4 Verify `ctx.waitUntil()` is used (not `await`) for DO notifications in server logs

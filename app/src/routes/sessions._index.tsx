@@ -1,5 +1,5 @@
-import { useLoaderData } from "react-router";
 import { useState } from "react";
+import { useLoaderData } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { SessionList } from "~/components/SessionList";
 import { SearchInput } from "~/components/ui/SearchInput";

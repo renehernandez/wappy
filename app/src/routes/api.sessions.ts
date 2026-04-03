@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { createSession, listSessions } from "~/server/functions/sessions";
 import { getDb } from "~/server/lib/db";

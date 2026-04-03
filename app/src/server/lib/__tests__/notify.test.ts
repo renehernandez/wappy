@@ -48,22 +48,22 @@ describe("notifyUserRoom", () => {
     );
   });
 
-  it("does not throw on fetch failure", async () => {
+  it("rejects on fetch failure", async () => {
     mockFetch.mockRejectedValue(new Error("DO unavailable"));
 
     await expect(
       notifyUserRoom("acc-123", { type: "session_created" }),
-    ).resolves.not.toThrow();
+    ).rejects.toThrow("DO unavailable");
   });
 
-  it("does not throw on idFromName failure", async () => {
+  it("rejects on idFromName failure", async () => {
     mockIdFromName.mockImplementationOnce(() => {
       throw new Error("bad id");
     });
 
-    await expect(
-      notifyUserRoom("acc-123", { type: "test" }),
-    ).resolves.not.toThrow();
+    await expect(notifyUserRoom("acc-123", { type: "test" })).rejects.toThrow(
+      "bad id",
+    );
   });
 });
 
@@ -92,11 +92,11 @@ describe("notifySessionRoom", () => {
     expect(body.seq).toBe(5);
   });
 
-  it("does not throw on failure", async () => {
+  it("rejects on failure", async () => {
     mockFetch.mockRejectedValue(new Error("network error"));
 
     await expect(
       notifySessionRoom("s-456", { type: "message" }),
-    ).resolves.not.toThrow();
+    ).rejects.toThrow("network error");
   });
 });

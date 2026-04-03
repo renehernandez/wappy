@@ -1,7 +1,7 @@
+import { upsertAccount } from "../functions/auth";
+import { getDb } from "../lib/db";
 import { extractCfAccessIdentity } from "./cf-access";
 import { extractDeviceIdentity } from "./device-token";
-import { getDb } from "../lib/db";
-import { upsertAccount } from "../functions/auth";
 
 export async function requireAuth(request: Request) {
   const db = getDb();

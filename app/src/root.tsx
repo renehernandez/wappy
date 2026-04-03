@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import {
   Links,
   Meta,
@@ -7,20 +8,17 @@ import {
   useLoaderData,
   useRevalidator,
 } from "react-router";
-import type { LoaderFunctionArgs, LinksFunction } from "react-router";
+import type { LinksFunction, LoaderFunctionArgs } from "react-router";
 import { useUserRoom } from "~/client/ws/useUserRoom";
 import { NavShell } from "~/components/ui/NavShell";
 import { extractCfAccessIdentity } from "~/server/auth/cf-access";
 import { extractDeviceIdentity } from "~/server/auth/device-token";
-import { getDb } from "~/server/lib/db";
 import { upsertAccount } from "~/server/functions/auth";
-import { accounts } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { getDb } from "~/server/lib/db";
 import appCss from "~/styles/app.css?url";
+import { accounts } from "../db/schema";
 
-export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: appCss },
-];
+export const links: LinksFunction = () => [{ rel: "stylesheet", href: appCss }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
@@ -63,10 +61,7 @@ function UserRoomListener({ accountId }: { accountId: string }) {
       notification.type === "session_updated" ||
       notification.type === "message_added"
     ) {
-      console.log(
-        "[UserRoomListener] Revalidating for",
-        notification.type,
-      );
+      console.log("[UserRoomListener] Revalidating for", notification.type);
       revalidate();
     }
   });

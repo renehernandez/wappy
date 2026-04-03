@@ -1,13 +1,13 @@
-import { Link, useLoaderData, useParams } from "react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLoaderData, useParams } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { useSessionRoom } from "~/client/ws/useSessionRoom";
 import { MessageThread } from "~/components/MessageThread";
 import { Badge } from "~/components/ui/Badge";
 import { StatusDot } from "~/components/ui/StatusDot";
 import { requireAuth } from "~/server/auth/require-auth";
-import { getSession } from "~/server/functions/sessions";
 import { listMessages } from "~/server/functions/messages";
+import { getSession } from "~/server/functions/sessions";
 import { getR2 } from "~/server/lib/r2";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -134,33 +134,27 @@ export default function SessionDetailPage() {
 
   // Poll for new messages as fallback when session is active
   const maxSeqRef = useRef(0);
+  const sessionStatus = data.found ? data.session.status : null;
   useEffect(() => {
-    if (!data.found || data.session.status !== "active") return;
+    if (!data.found || sessionStatus !== "active") return;
 
     const interval = setInterval(() => {
-      fetchGapMessages(sessionId, maxSeqRef.current).then(
-        (msgs) => {
-          for (const msg of msgs) {
-            handleWsMessage({
-              id: msg.id,
-              seq: msg.seq,
-              role: msg.role,
-              content: msg.content,
-              metadata: msg.metadata,
-              createdAt: msg.createdAt,
-            });
-          }
-        },
-      );
+      fetchGapMessages(sessionId, maxSeqRef.current).then((msgs) => {
+        for (const msg of msgs) {
+          handleWsMessage({
+            id: msg.id,
+            seq: msg.seq,
+            role: msg.role,
+            content: msg.content,
+            metadata: msg.metadata,
+            createdAt: msg.createdAt,
+          });
+        }
+      });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [
-    data.found,
-    data.found ? data.session.status : null,
-    sessionId,
-    handleWsMessage,
-  ]);
+  }, [data.found, sessionStatus, sessionId, handleWsMessage]);
 
   if (!data.found) {
     return (

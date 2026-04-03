@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { pollDeviceCode } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
