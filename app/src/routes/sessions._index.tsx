@@ -1,6 +1,6 @@
 import { useLoaderData } from "react-router";
 import { useState } from "react";
-import type { Route } from "./+types/sessions._index";
+import type { LoaderFunctionArgs } from "react-router";
 import { SessionList } from "~/components/SessionList";
 import { SearchInput } from "~/components/ui/SearchInput";
 import { requireAuth } from "~/server/auth/require-auth";
@@ -13,7 +13,7 @@ const STATUS_FILTERS = [
   { value: "archived", label: "Archived" },
 ] as const;
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const { accountId, db } = await requireAuth(request);
     const sessions = await listSessions(accountId, {}, db as any);

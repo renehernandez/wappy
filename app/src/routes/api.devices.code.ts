@@ -1,8 +1,8 @@
-import type { Route } from "./+types/api.devices.code";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { createDeviceCode } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const db = getDb();
 
   let body: Record<string, unknown>;

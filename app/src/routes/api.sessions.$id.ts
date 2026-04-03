@@ -1,9 +1,9 @@
-import type { Route } from "./+types/api.sessions.$id";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { updateSession } from "~/server/functions/sessions";
 import { getDb } from "~/server/lib/db";
 
-export async function action({ request, params, context }: Route.ActionArgs) {
+export async function action({ request, params, context }: ActionFunctionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {
@@ -26,7 +26,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   try {
     const session = await updateSession(
-      params.id,
+      params.id!,
       identity.accountId,
       {
         title: typeof body.title === "string" ? body.title : undefined,

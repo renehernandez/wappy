@@ -1,9 +1,9 @@
-import type { Route } from "./+types/api.devices";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { listDevices } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {

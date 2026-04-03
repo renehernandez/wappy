@@ -1,9 +1,9 @@
-import type { Route } from "./+types/api.devices.revoke";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { revokeDevice } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {

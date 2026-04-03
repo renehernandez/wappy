@@ -1,12 +1,12 @@
 import { Link, useLoaderData, useRouteLoaderData, useFetcher } from "react-router";
-import type { Route } from "./+types/_index";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { DeviceList } from "~/components/DeviceList";
 import { SessionList } from "~/components/SessionList";
 import { requireAuth } from "~/server/auth/require-auth";
 import { listDevices, revokeDevice } from "~/server/functions/devices";
 import { listSessions } from "~/server/functions/sessions";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   try {
     const { accountId, db } = await requireAuth(request);
     const [devices, sessions] = await Promise.all([
@@ -19,7 +19,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const { accountId, db } = await requireAuth(request);
   const formData = await request.formData();
   const machineId = formData.get("machineId") as string;

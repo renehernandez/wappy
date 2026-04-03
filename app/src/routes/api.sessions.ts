@@ -1,9 +1,9 @@
-import type { Route } from "./+types/api.sessions";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { createSession, listSessions } from "~/server/functions/sessions";
 import { getDb } from "~/server/lib/db";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {
@@ -25,7 +25,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return Response.json(sessions);
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const db = getDb();
   const identity = await authenticateRequest(request, db);
   if (!identity) {

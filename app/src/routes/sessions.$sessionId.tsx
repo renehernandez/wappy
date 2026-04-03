@@ -1,6 +1,6 @@
 import { Link, useLoaderData, useParams } from "react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Route } from "./+types/sessions.$sessionId";
+import type { LoaderFunctionArgs } from "react-router";
 import { useSessionRoom } from "~/client/ws/useSessionRoom";
 import { MessageThread } from "~/components/MessageThread";
 import { Badge } from "~/components/ui/Badge";
@@ -10,16 +10,17 @@ import { getSession } from "~/server/functions/sessions";
 import { listMessages } from "~/server/functions/messages";
 import { getR2 } from "~/server/lib/r2";
 
-export async function loader({ request, params }: Route.LoaderArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   try {
     const { accountId, db } = await requireAuth(request);
-    const session = await getSession(params.sessionId, accountId, db as any);
+    const sessionId = params.sessionId!;
+    const session = await getSession(sessionId, accountId, db as any);
     if (!session) return { found: false as const };
 
     const r2 = getR2();
     const messages = await listMessages(
       accountId,
-      { sessionId: params.sessionId },
+      { sessionId },
       db as any,
       r2,
     );
@@ -54,7 +55,10 @@ function BackIcon() {
   );
 }
 
-async function fetchGapMessages(sessionId: string, afterSeq: number) {
+async function fetchGapMessages(
+  sessionId: string,
+  afterSeq: number,
+): Promise<any[]> {
   try {
     const res = await fetch(
       `/api/messages?sessionId=${encodeURIComponent(sessionId)}&afterSeq=${afterSeq}`,
@@ -108,7 +112,7 @@ export default function SessionDetailPage() {
   const handleWsConnect = useCallback(() => {
     if (!data.found) return;
     const afterSeq = loaderMaxSeqRef.current;
-    fetchGapMessages(sessionId, afterSeq).then((gapMessages: any[]) => {
+    fetchGapMessages(sessionId, afterSeq).then((gapMessages) => {
       for (const msg of gapMessages) {
         handleWsMessage({
           id: msg.id,
@@ -135,7 +139,7 @@ export default function SessionDetailPage() {
 
     const interval = setInterval(() => {
       fetchGapMessages(sessionId, maxSeqRef.current).then(
-        (msgs: any[]) => {
+        (msgs) => {
           for (const msg of msgs) {
             handleWsMessage({
               id: msg.id,

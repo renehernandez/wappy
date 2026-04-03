@@ -1,10 +1,10 @@
-import type { Route } from "./+types/api.sync";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { getChanges } from "~/server/functions/sync";
 import { getDb } from "~/server/lib/db";
 import { getR2 } from "~/server/lib/r2";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);

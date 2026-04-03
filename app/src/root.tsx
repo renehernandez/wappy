@@ -7,7 +7,7 @@ import {
   useLoaderData,
   useRevalidator,
 } from "react-router";
-import type { Route } from "./+types/root";
+import type { LoaderFunctionArgs, LinksFunction } from "react-router";
 import { useUserRoom } from "~/client/ws/useUserRoom";
 import { NavShell } from "~/components/ui/NavShell";
 import { extractCfAccessIdentity } from "~/server/auth/cf-access";
@@ -18,11 +18,11 @@ import { accounts } from "../db/schema";
 import { eq } from "drizzle-orm";
 import appCss from "~/styles/app.css?url";
 
-export const links: Route.LinksFunction = () => [
+export const links: LinksFunction = () => [
   { rel: "stylesheet", href: appCss },
 ];
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
 
   // Strategy 1: CF Access JWT (browser)

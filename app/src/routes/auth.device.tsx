@@ -1,6 +1,6 @@
 import { useLoaderData, useRouteLoaderData, useFetcher, useSearchParams } from "react-router";
 import { useState } from "react";
-import type { Route } from "./+types/auth.device";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { DeviceApproval } from "~/components/DeviceApproval";
 import { requireAuth } from "~/server/auth/require-auth";
 import {
@@ -10,7 +10,7 @@ import {
 } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code") || "";
   if (!code) return { found: false as const };
@@ -22,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { found: true as const, details, code };
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const { accountId, db } = await requireAuth(request);
   const formData = await request.formData();
   const intent = formData.get("intent") as string;

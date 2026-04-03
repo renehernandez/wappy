@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router";
 import { Badge } from "~/components/ui/Badge";
 import { Card } from "~/components/ui/Card";
 import { StatusDot } from "~/components/ui/StatusDot";
@@ -37,8 +37,7 @@ export function SessionList({ sessions }: SessionListProps) {
       {sessions.map((session) => (
         <li key={session.id}>
           <Link
-            to="/sessions/$sessionId"
-            params={{ sessionId: session.id }}
+            to={`/sessions/${session.id}`}
             className="block focus:outline-none focus:ring-2 focus:ring-cyan-500/40 rounded-lg"
           >
             <Card hover className="p-4 min-h-12">

@@ -1,4 +1,4 @@
-import type { Route } from "./+types/api.connect";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { eq } from "drizzle-orm";
 import { extractCfAccessIdentity } from "~/server/auth/cf-access";
 import { extractDeviceIdentity } from "~/server/auth/device-token";
@@ -6,7 +6,7 @@ import { upsertAccount } from "~/server/functions/auth";
 import { getDb } from "~/server/lib/db";
 import { accounts } from "../../db/schema";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
 
   const cfIdentity = extractCfAccessIdentity(request);

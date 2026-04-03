@@ -1,10 +1,10 @@
-import type { Route } from "./+types/api.messages";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { addMessage, listMessages } from "~/server/functions/messages";
 import { getDb } from "~/server/lib/db";
 import { getR2 } from "~/server/lib/r2";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);
@@ -32,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return Response.json(messages);
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);

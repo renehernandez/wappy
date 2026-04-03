@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router";
 
 interface NavShellProps {
   children: React.ReactNode;
@@ -64,8 +64,8 @@ function DevicesIcon({ active }: { active: boolean }) {
 }
 
 export function NavShell({ children, userEmail }: NavShellProps) {
-  const routerState = useRouterState();
-  const pathname = routerState.location.pathname;
+  const location = useLocation();
+  const pathname = location.pathname;
 
   function isActive(matchPrefix: string) {
     if (matchPrefix === "/") return pathname === "/";

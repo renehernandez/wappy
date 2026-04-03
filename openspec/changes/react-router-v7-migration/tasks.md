@@ -57,7 +57,7 @@
 - [ ] 8.1 Update `app/src/server/lib/__tests__/notify.test.ts` — tests stay mostly the same, notify is still async
 - [ ] 8.2 Update any tests importing from `@tanstack/react-start` or `@tanstack/react-router`
 - [ ] 8.3 Run `pnpm test` and fix all failures
-- [ ] 8.4 Run `pnpm typecheck` and fix all type errors
+- [x] 8.4 Run `pnpm typecheck` and fix all type errors
 - [ ] 8.5 Run `pnpm lint` and fix all lint issues
 
 ## 9. Validation

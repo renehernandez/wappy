@@ -1,8 +1,8 @@
-import type { Route } from "./+types/api.devices.poll";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { pollDeviceCode } from "~/server/functions/devices";
 import { getDb } from "~/server/lib/db";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
   const db = getDb();
   const url = new URL(request.url);
   const code = url.searchParams.get("code");

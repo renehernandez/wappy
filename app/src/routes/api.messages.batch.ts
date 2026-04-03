@@ -1,10 +1,10 @@
-import type { Route } from "./+types/api.messages.batch";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { authenticateRequest } from "~/server/auth/api-auth";
 import { addMessages } from "~/server/functions/messages";
 import { getDb } from "~/server/lib/db";
 import { getR2 } from "~/server/lib/r2";
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request, context }: ActionFunctionArgs) {
   const db = getDb();
   const r2 = getR2();
   const identity = await authenticateRequest(request, db);
